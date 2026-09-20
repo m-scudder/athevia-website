@@ -20,12 +20,12 @@ Once Apple creates Athevia's public App Store URL, replace the empty string with
 
 ## GitHub Pages
 
-This repository is designed to publish directly from the `main` branch root using GitHub Pages.
+This repository publishes the live website from the `docs/` directory on the `main` branch using GitHub Pages.
 
 1. Repository **Settings** → **Pages**
 2. Source: **Deploy from a branch**
 3. Branch: **main**
-4. Folder: **/(root)**
+4. Folder: **/docs**
 
 Expected site URL:
 
