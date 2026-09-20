@@ -10,7 +10,7 @@
   <meta property="og:type" content="website">
   <title>Athevia — Adaptive Run, Swim &amp; Cycle Training</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="assets/styles.css?v=20260920">
+  <link rel="stylesheet" href="assets/styles.css?v=20260920-carousel">
 </head>
 <body>
 <header class="site-header">
@@ -42,10 +42,59 @@
       <p class="store-note js-store-note">App Store release coming soon.</p>
       <div class="hero-chips"><span>Run</span><span>Swim</span><span>Cycle</span><span>Apple Health</span></div>
     </div>
-    <div class="hero-shot reveal">
-      <div class="shot-glow"></div>
-      <img class="device" src="assets/screenshots/home-start.png" width="1170" height="2532" alt="Home showing weekly completion, the sport breakdown and today's run with a Start Workout button" fetchpriority="high" decoding="async">
-    </div>
+    <section class="app-carousel" aria-label="Explore Athevia" aria-roledescription="carousel" tabindex="0">
+      <div class="carousel-slides" id="app-slides">
+        <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label="1 of 6: Your week, at a glance">
+          <div class="screenshot-crop" style="--crop-top:-6.428571%">
+            <img src="assets/screenshots/home-start.png" width="1170" height="2532" alt="Weekly completion and today’s running workout" fetchpriority="high" decoding="async" draggable="false">
+          </div>
+          <figcaption><b>Your week, at a glance</b><span>See your weekly progress and today’s workout in one place.</span></figcaption>
+        </figure>
+        <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label="2 of 6: Every session, clearly planned" hidden>
+          <div class="screenshot-crop" style="--crop-top:-6.428571%">
+            <img src="assets/screenshots/swim-plan.png" width="1170" height="2532" alt="Swimming workout with warm-up, main sets and rest guidance" loading="lazy" decoding="async" draggable="false">
+          </div>
+          <figcaption><b>Every session, clearly planned</b><span>Follow warm-ups, sets, rest periods and technique guidance.</span></figcaption>
+        </figure>
+        <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label="3 of 6: Look inside your workout" hidden>
+          <div class="screenshot-crop" style="--crop-top:-6.428571%">
+            <img src="assets/screenshots/workout-analysis.png" width="1170" height="2532" alt="Completed run with heart rate, cadence, energy and pace charts" loading="lazy" decoding="async" draggable="false">
+          </div>
+          <figcaption><b>Look inside your workout</b><span>Explore heart rate, cadence, energy and pace when available.</span></figcaption>
+        </figure>
+        <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label="4 of 6: Capture how it felt" hidden>
+          <div class="screenshot-crop" style="--crop-top:-15.714286%">
+            <img src="assets/screenshots/feedback.png" width="1170" height="2532" alt="Effort, pain and recovery feedback" loading="lazy" decoding="async" draggable="false">
+          </div>
+          <figcaption><b>Capture how it felt</b><span>Log effort, pain and recovery after your session.</span></figcaption>
+        </figure>
+        <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label="5 of 6: See your progress" hidden>
+          <div class="screenshot-crop" style="--crop-top:-6.428571%">
+            <img src="assets/screenshots/progress.png" width="1170" height="2532" alt="Four-week training totals, sport progress and a training trend chart" loading="lazy" decoding="async" draggable="false">
+          </div>
+          <figcaption><b>See your progress</b><span>Review training time, consistency and progress across sports.</span></figcaption>
+        </figure>
+        <figure class="carousel-slide" role="group" aria-roledescription="slide" aria-label="6 of 6: Understand your next week" hidden>
+          <div class="screenshot-crop" style="--crop-top:-6.428571%">
+            <img src="assets/screenshots/week-analysis.png" width="1170" height="2532" alt="Weekly analysis with completed sessions, effort and plan recommendations" loading="lazy" decoding="async" draggable="false">
+          </div>
+          <figcaption><b>Understand your next week</b><span>Review each sport and the reasoning behind your plan.</span></figcaption>
+        </figure>
+      </div>
+      <div class="carousel-controls" hidden>
+        <button class="carousel-arrow" type="button" data-carousel-prev aria-label="Previous screenshot" aria-controls="app-slides">←</button>
+        <div class="carousel-dots" role="group" aria-label="Choose a screenshot">
+          <button type="button" class="carousel-dot" data-carousel-index="0" aria-label="Show your week, at a glance" aria-current="true"><span></span></button>
+          <button type="button" class="carousel-dot" data-carousel-index="1" aria-label="Show every session, clearly planned" aria-current="false"><span></span></button>
+          <button type="button" class="carousel-dot" data-carousel-index="2" aria-label="Show look inside your workout" aria-current="false"><span></span></button>
+          <button type="button" class="carousel-dot" data-carousel-index="3" aria-label="Show capture how it felt" aria-current="false"><span></span></button>
+          <button type="button" class="carousel-dot" data-carousel-index="4" aria-label="Show see your progress" aria-current="false"><span></span></button>
+          <button type="button" class="carousel-dot" data-carousel-index="5" aria-label="Show understand your next week" aria-current="false"><span></span></button>
+        </div>
+        <button class="carousel-arrow" type="button" data-carousel-next aria-label="Next screenshot" aria-controls="app-slides">→</button>
+      </div>
+      <p class="sr-only" data-carousel-status aria-live="polite" aria-atomic="true"></p>
+    </section>
   </section>
 
   <section class="loop-strip" id="loop">
@@ -55,96 +104,37 @@
   </section>
 
 
-  <section class="shell section" id="home">
-    <div class="two-up">
-      <div class="feature-copy reveal">
-        <p class="eyebrow">FROM READY TO DONE</p>
-        <h2>Your next session.<br>Your latest achievement.</h2>
-        <p>Home keeps today's workout and the whole week's progress together. See the plan, start your session and return to the results when you're done.</p>
-        <div class="feature-points">
-          <article><b>Know the week</b><span>Planned time, completed sessions and the run, swim and cycle breakdown at a glance.</span></article>
-          <article><b>Review the result</b><span>See time, distance and pace after a supported workout, then share the session from Home or Plan.</span></article>
-          <article><b>Add your report</b><span>Capture how the workout felt while it is still fresh.</span></article>
-        </div>
-      </div>
-      <img class="device reveal" src="assets/screenshots/home-complete.png" width="1170" height="2532" alt="Home after a completed run, showing time, distance, pace, a share button and Add your report" loading="lazy" decoding="async">
+  <section class="shell section concise-section" id="training">
+    <div class="section-heading">
+      <p class="eyebrow">ONE PLAN. THREE SPORTS.</p>
+      <h2>Make room for training.</h2>
+      <p>A clear week of running, swimming and cycling, with the details you need to get started.</p>
     </div>
-  </section>
-
-  <section class="shell section" id="training">
-    <div class="section-heading reveal">
-      <p class="eyebrow">YOUR WEEK, IN ONE PLACE</p>
-      <h2>Run. Swim. Cycle. One plan.</h2>
-      <p>See training and rest days together. Open a session for its duration or distance, workout structure and practical guidance.</p>
-    </div>
-    <div class="feature-split">
-      <img class="device reveal" src="assets/screenshots/swim-plan.png" width="1170" height="2532" alt="Swimming plan showing a 300-metre session with warm-up, main sets, breathing guidance and rest instructions" loading="lazy" decoding="async">
-      <div class="feature-copy reveal">
-        <p class="kicker">A CLEAR PLAN FOR EACH SESSION</p>
-        <h3>Know every step before you start.</h3>
-        <p>Run/walk intervals, swim lengths and cycling sessions make the work clear. Swim plans include warm-up sets, breathing drills, technique cues and rest between lengths.</p>
-        <div class="feature-points">
-          <article><b>Week at a glance</b><span>See run, swim, cycle and recovery days together.</span></article>
-          <article><b>Session detail</b><span>Warm-up, main set, repetitions, distance and rest are visible before training.</span></article>
-          <article><b>Works with your day</b><span>Start the workout on iPhone, use Apple Watch where supported, or record completion manually.</span></article>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band">
-    <div class="shell section two-up">
-      <div class="feature-copy reveal">
-        <p class="eyebrow">LOOK INSIDE THE WORKOUT</p>
-        <h2>Understand the session you completed.</h2>
-        <p>Review the workout against its target. Explore heart rate, cadence, active energy, pace and time in heart-rate zones when those metrics are available.</p>
-        <div class="metric-tags"><span>Heart rate</span><span>Cadence</span><span>Energy</span><span>Pace</span><span>Zones</span></div>
-        <p class="muted">Available metrics depend on the workout source and sensors you use.</p>
-      </div>
-      <img class="device reveal" src="assets/screenshots/workout-analysis.png" width="1170" height="2532" alt="Completed running workout with heart rate, cadence, energy and pace charts, plus a heart-rate zones section" loading="lazy" decoding="async">
-    </div>
-  </section>
-
-  <section class="shell section">
-    <div class="feature-split reverse">
-      <img class="device reveal" src="assets/screenshots/feedback.png" width="1170" height="2532" alt="Post-workout feedback with effort from 1 to 10, pain from 0 to 10, recovery and optional symptom flags" loading="lazy" decoding="async">
-      <div class="feature-copy reveal">
-        <p class="eyebrow">HOW IT FELT MATTERS</p>
-        <h2>Tell Athevia how the workout felt.</h2>
-        <p>Add a quick report after training: how hard it felt, any pain and how recovered you feel. Optional symptom flags add context to your training record.</p>
-        <div class="feedback-grid">
-          <article><b>Effort 1–10</b><span>How hard did it feel?</span></article>
-          <article><b>Pain 0–10</b><span>Was there any pain?</span></article>
-          <article><b>Recovery</b><span>Fresh, good, okay, tired or exhausted.</span></article>
-          <article><b>Symptoms</b><span>Optional flags for unusual responses.</span></article>
-        </div>
-      </div>
+    <div class="benefit-grid">
+      <article><span class="benefit-number">01 / PLAN</span><h3>Know what’s next.</h3><p>Your sport mix, training days and structured sessions in one place.</p></article>
+      <article><span class="benefit-number">02 / TRAIN</span><h3>Follow each step.</h3><p>Run/walk intervals, swim sets and cycling sessions with practical guidance.</p></article>
+      <article><span class="benefit-number">03 / ADAPT</span><h3>Build on your week.</h3><p>Completed workouts and your feedback help shape the next plan.</p></article>
     </div>
   </section>
 
   <section class="band" id="insights">
-    <div class="shell section">
-      <div class="section-heading reveal">
-        <p class="eyebrow">LEARN FROM THE WEEK</p>
-        <h2>See your progress.<br>Understand what comes next.</h2>
-        <p>Check training time, workout count and adherence over the last four weeks. Open a weekly analysis to review each sport and see the recommendation for your next plan.</p>
+    <div class="shell section concise-section insight-copy">
+      <div class="section-heading">
+        <p class="eyebrow">NUMBERS, WITH CONTEXT</p>
+        <h2>See the progress.<br>Remember how it felt.</h2>
+        <p>Review your workout metrics, log effort and recovery, then see the week’s recommendation for each sport.</p>
       </div>
-      <div class="gallery">
-        <figure class="reveal"><img class="device" src="assets/screenshots/progress.png" width="1170" height="2532" alt="Progress overview showing the last four weeks of training time, workout count, adherence and sport-specific progress" loading="lazy" decoding="async"><figcaption><b>Progress overview</b><span>Training time, workout count, adherence and trends, with a separate view of progress in each sport.</span></figcaption></figure>
-        <figure class="reveal"><img class="device" src="assets/screenshots/week-analysis.png" width="1170" height="2532" alt="Weekly analysis showing completed sessions, duration, average effort, pain and a Maintain recommendation with a Why link" loading="lazy" decoding="async"><figcaption><b>Week analysis</b><span>Completed sessions, time or distance, average reported effort and pain. Open “Why?” to understand the plan recommendation.</span></figcaption></figure>
+      <div class="insight-details">
+        <article><h3>Workout analysis</h3><p>Heart rate, cadence, energy and pace when supported by your workout source.</p></article>
+        <article><h3>Your feedback</h3><p>Effort, pain and recovery add the context that numbers alone can’t capture.</p></article>
+        <article><h3>Weekly perspective</h3><p>Training time, consistency and a clear explanation of what comes next.</p></article>
       </div>
     </div>
   </section>
 
-  <section class="shell section local-first">
-    <div class="feature-copy reveal">
-      <p class="eyebrow">LOCAL FIRST</p>
-      <h2>Your training starts on your iPhone.</h2>
-      <p>Choose “Continue on this iPhone” to keep using your local training. Choose “Continue with Apple” when you want cloud backup and restore.</p>
-      <p class="muted">Apple Health and location access are permission-based and are used only for the features you choose to enable.</p>
-      <a class="text-link" href="privacy/">Read the Privacy Policy →</a>
-    </div>
-    <img class="device reveal" src="assets/screenshots/login.png" width="1170" height="2532" alt="Athevia welcome screen with Continue with Apple and Continue on this iPhone options" loading="lazy" decoding="async">
+  <section class="shell compact-privacy">
+    <div><p class="eyebrow">ON YOUR TERMS</p><h2>Start on your iPhone.</h2><p>Keep training locally, or sign in with Apple for cloud backup and restore. Health and location access stay permission-based.</p></div>
+    <a class="button secondary" href="privacy/">Privacy Policy</a>
   </section>
 
   <section class="cta" id="download">
@@ -164,6 +154,6 @@
   <div class="footer-links"><a href="privacy/">Privacy</a><a href="support/">Support</a></div>
   <small>© <span id="year"></span> Athevia. All rights reserved.</small>
 </footer>
-<script src="assets/site.js?v=20260920"></script>
+<script src="assets/site.js?v=20260920-carousel"></script>
 </body>
 </html>

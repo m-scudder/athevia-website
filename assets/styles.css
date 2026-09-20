@@ -14,3 +14,43 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #41
 @media(max-width:900px){.shot-glow{width:min(420px,100%)}.hero{gap:40px}.site-header nav a{width:100%;padding:8px 0}.site-header nav .nav-cta{padding:9px 14px}.hero-shot .device{width:min(335px,100%)}}
 @media(max-width:360px){.section-heading h2,.feature-copy h2,.cta h2{font-size:39px}.feedback-grid article{padding:16px}.brand{gap:8px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.button{transition:none}.button:hover{transform:none}}
+
+/* One focused screenshot viewport; crop coordinates use the original 1170 × 2532 images. */
+[hidden]{display:none!important}
+.hero{min-height:720px;padding:60px 0;gap:70px}
+.app-carousel{width:100%;max-width:410px;min-width:0;justify-self:center;outline-offset:8px}
+.carousel-slide{margin:0;display:grid;justify-items:center}
+.screenshot-crop{position:relative;width:min(292px,100%);aspect-ratio:1074/2100;overflow:hidden;border-radius:22px;background:#000;box-shadow:0 0 0 1px #29292d,0 20px 70px #121b2633;isolation:isolate;touch-action:pan-y}
+.screenshot-crop img{position:absolute;width:108.938547%;max-width:none;height:auto;left:-4.469274%;top:var(--crop-top);user-select:none;pointer-events:none}
+.carousel-slide figcaption{width:100%;max-width:360px;text-align:center;margin:20px 0 0;min-height:82px;gap:5px}
+.carousel-slide figcaption b{font-size:18px;color:#f5f5f7}
+.carousel-slide figcaption span{font-size:14px;line-height:1.5;color:#a1a1a7}
+.carousel-controls{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px}
+.carousel-arrow{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:1px solid #363639;background:#131315;border-radius:50%;font-size:21px;color:#f5f5f7;cursor:pointer}
+.carousel-arrow:hover{background:#29292d}
+.carousel-dots{display:flex;align-items:center;gap:0}
+.carousel-dot{display:grid;place-items:center;width:28px;height:44px;padding:0;border:0;background:none;cursor:pointer}
+.carousel-dot span{width:6px;height:6px;border-radius:50%;background:#626268}
+.carousel-dot[aria-current="true"] span{width:16px;border-radius:8px;background:#f5f5f7}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.concise-section{padding:80px 0}
+.concise-section .section-heading{margin-bottom:36px}
+.concise-section h2{font-size:clamp(36px,4.5vw,54px)}
+.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+.benefit-grid article{border-top:1px solid #303034;padding-top:24px}
+.benefit-number{font-size:11px;font-weight:700;letter-spacing:.12em;color:#96969e}
+.benefit-grid h3,.insight-details h3{font-size:21px;letter-spacing:-.025em;margin:14px 0 8px}
+.benefit-grid p,.insight-details p,.compact-privacy p{color:#a1a1a7;font-size:16px;line-height:1.65;margin:0}
+.insight-copy{display:grid;grid-template-columns:1.1fr .9fr;gap:80px;align-items:start}
+.insight-copy .section-heading{margin:0}
+.insight-details article{padding:0 0 20px;margin-bottom:20px;border-bottom:1px solid #2b2b2e}
+.insight-details article:last-child{margin-bottom:0;border-bottom:0;padding-bottom:0}
+.insight-details h3{margin-top:0}
+.compact-privacy{display:flex;align-items:center;justify-content:space-between;gap:40px;padding:65px 0}
+.compact-privacy>div{max-width:740px}
+.compact-privacy .eyebrow{font-size:11px;margin:0 0 12px}
+.compact-privacy h2{font-size:30px;letter-spacing:-.035em;margin:0 0 12px}
+.compact-privacy .button{white-space:nowrap;flex-shrink:0}
+.cta{min-height:420px}.cta-inner{padding:65px 24px}.cta h2{font-size:clamp(38px,5vw,58px)}
+@media(max-width:900px){.hero{gap:42px;padding:50px 0}.hero h1{font-size:76px}.app-carousel{max-width:360px}.insight-copy{grid-template-columns:1fr;gap:32px}.compact-privacy{align-items:flex-start;flex-direction:column;gap:24px}}
+@media(max-width:620px){.hero h1{font-size:62px}.screenshot-crop{width:min(270px,100%)}.hero .supporting{font-size:16px}.benefit-grid{grid-template-columns:1fr;gap:25px}.concise-section{padding:55px 0}.compact-privacy{padding:48px 0}.carousel-slide figcaption{min-height:85px;padding:0 6px}.app-carousel{max-width:320px}}
