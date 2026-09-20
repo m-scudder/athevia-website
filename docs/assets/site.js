@@ -39,42 +39,80 @@ if (menuButton && navigation) {
 }
 
 
-// Manual carousel: no autoplay, with keyboard, touch and button navigation.
+// Automatic carousel with manual selection and interaction-aware pausing.
 const carousel = document.querySelector('.app-carousel');
 if (carousel) {
   const slides = [...carousel.querySelectorAll('.carousel-slide')];
   const dots = [...carousel.querySelectorAll('[data-carousel-index]')];
-  const controls = carousel.querySelector('.carousel-controls');
   const status = carousel.querySelector('[data-carousel-status]');
-  let current = 0;
-  const showSlide = index => {
+  const playback = carousel.querySelector('[data-carousel-playback]');
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let current = 0, timer = null, paused = motion.matches;
+  let hovered = false, focused = false, touching = false, visible = true;
+  let touchStart = null;
+  const schedule = () => {
+    clearTimeout(timer);
+    timer = null;
+    if (paused || hovered || focused || touching || !visible || document.hidden || slides.length < 2) return;
+    timer = setTimeout(() => showSlide(current + 1, false), 5000);
+  };
+  const showSlide = (index, announce = true) => {
     current = (index + slides.length) % slides.length;
     slides.forEach((slide, i) => { slide.hidden = i !== current; });
-    dots.forEach((dot, i) => { dot.setAttribute('aria-current', String(i === current)); });
-    status.textContent = slides[current].getAttribute('aria-label');
+    dots.forEach((dot, i) => dot.setAttribute('aria-current', String(i === current)));
+    // Automatic changes stay silent for screen readers.
+    status.textContent = announce ? slides[current].getAttribute('aria-label') : '';
+    schedule();
   };
-  controls.hidden = false;
-  carousel.querySelector('[data-carousel-prev]').addEventListener('click', () => showSlide(current - 1));
-  carousel.querySelector('[data-carousel-next]').addEventListener('click', () => showSlide(current + 1));
+  const updatePlayback = () => {
+    playback.textContent = paused ? 'Play' : 'Pause';
+    playback.setAttribute('aria-label', paused ? 'Play slideshow' : 'Pause slideshow');
+    schedule();
+  };
+  carousel.querySelector('.carousel-controls').hidden = false;
+  playback.addEventListener('click', () => {
+    paused = !paused;
+    if (!paused) { hovered = false; focused = false; }
+    updatePlayback();
+  });
   dots.forEach((dot, i) => dot.addEventListener('click', () => showSlide(i)));
   carousel.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
-    if (event.key === 'Home') showSlide(0);
-    else if (event.key === 'End') showSlide(slides.length - 1);
-    else showSlide(current + (event.key === 'ArrowRight' ? 1 : -1));
+    showSlide(event.key === 'Home' ? 0 : event.key === 'End' ? slides.length - 1 : current + (event.key === 'ArrowRight' ? 1 : -1));
   });
-  let touchStart = null;
+  carousel.addEventListener('pointerenter', event => {
+    if (event.pointerType === 'mouse') { hovered = true; schedule(); }
+  });
+  carousel.addEventListener('pointerleave', event => {
+    if (event.pointerType === 'mouse') { hovered = false; schedule(); }
+  });
+  carousel.addEventListener('focusin', () => { focused = true; schedule(); });
+  carousel.addEventListener('focusout', event => {
+    if (!carousel.contains(event.relatedTarget)) { focused = false; schedule(); }
+  });
   carousel.addEventListener('touchstart', event => {
-    if (event.touches.length !== 1 || !event.target.closest('.screenshot-crop')) { touchStart = null; return; }
-    touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    touching = true; schedule();
+    touchStart = event.touches.length === 1 && event.target.closest('.screenshot-crop')
+      ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
   }, { passive: true });
   carousel.addEventListener('touchend', event => {
-    if (!touchStart || !event.changedTouches.length) return;
-    const dx = event.changedTouches[0].clientX - touchStart.x;
-    const dy = event.changedTouches[0].clientY - touchStart.y;
-    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) showSlide(current + (dx < 0 ? 1 : -1));
-    touchStart = null;
+    if (touchStart && event.changedTouches.length) {
+      const dx = event.changedTouches[0].clientX - touchStart.x;
+      const dy = event.changedTouches[0].clientY - touchStart.y;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) showSlide(current + (dx < 0 ? 1 : -1));
+    }
+    touchStart = null; touching = event.touches.length > 0; schedule();
   }, { passive: true });
-  carousel.addEventListener('touchcancel', () => { touchStart = null; }, { passive: true });
+  carousel.addEventListener('touchcancel', () => { touchStart = null; touching = false; schedule(); }, { passive: true });
+  document.addEventListener('visibilitychange', schedule);
+  motion.addEventListener('change', event => {
+    if (event.matches) { paused = true; updatePlayback(); }
+  });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      visible = entries[0].isIntersecting; schedule();
+    }, { threshold: 0 }).observe(carousel);
+  }
+  updatePlayback();
 }

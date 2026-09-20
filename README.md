@@ -46,7 +46,7 @@ A custom domain can be added later without changing the site structure. Good can
 
 ## Content and screenshots
 
-The homepage uses one manual carousel with five selected app screens. Arrows, pagination, keyboard navigation and horizontal swipes change the active slide. There is no autoplay. CSS crop viewports hide only the phone status bar, keeping the app’s bottom navigation visible without altering the original screenshot text or charts. All five screenshots retain the padded frame and show the complete bottom navigation bar.
+The homepage uses one autoplay carousel with five selected app screens. Slides advance every five seconds. Dots, keyboard navigation and horizontal swipes remain available, with a Play/Pause control. Autoplay pauses on hover, focus, touch, hidden tabs and when offscreen. Reduced-motion users start with autoplay paused. CSS crop viewports hide only the phone status bar, keeping the app’s bottom navigation visible without altering the original screenshot text or charts. All five screenshots retain the padded frame and show the complete bottom navigation bar.
 
 `docs/` is the publishing source. The root homepage, assets, privacy and support pages mirror it so either Pages source serves a complete site. Keep both copies in sync when editing.
 
