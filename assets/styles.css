@@ -20,7 +20,8 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #41
 .hero{min-height:720px;padding:60px 0;gap:70px}
 .app-carousel{width:100%;max-width:410px;min-width:0;justify-self:center;outline-offset:8px}
 .carousel-slide{margin:0;display:grid;justify-items:center}
-.screenshot-crop{position:relative;width:min(292px,100%);aspect-ratio:1074/2100;overflow:hidden;border-radius:22px;background:#000;box-shadow:0 0 0 1px #29292d,0 20px 70px #121b2633;isolation:isolate;touch-action:pan-y}
+.screenshot-frame{width:min(324px,100%);padding:16px;border-radius:28px;background:#000;box-shadow:0 0 0 1px #29292d,0 20px 70px #121b2633}
+.screenshot-crop{position:relative;width:100%;aspect-ratio:1074/2100;overflow:hidden;border-radius:12px;background:#000;isolation:isolate;touch-action:pan-y}
 .screenshot-crop img{position:absolute;width:108.938547%;max-width:none;height:auto;left:-4.469274%;top:var(--crop-top);user-select:none;pointer-events:none}
 .carousel-slide figcaption{width:100%;max-width:360px;text-align:center;margin:20px 0 0;min-height:82px;gap:5px}
 .carousel-slide figcaption b{font-size:18px;color:#f5f5f7}
@@ -53,4 +54,4 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #41
 .compact-privacy .button{white-space:nowrap;flex-shrink:0}
 .cta{min-height:420px}.cta-inner{padding:65px 24px}.cta h2{font-size:clamp(38px,5vw,58px)}
 @media(max-width:900px){.hero{gap:42px;padding:50px 0}.hero h1{font-size:76px}.app-carousel{max-width:360px}.insight-copy{grid-template-columns:1fr;gap:32px}.compact-privacy{align-items:flex-start;flex-direction:column;gap:24px}}
-@media(max-width:620px){.hero h1{font-size:62px}.screenshot-crop{width:min(270px,100%)}.hero .supporting{font-size:16px}.benefit-grid{grid-template-columns:1fr;gap:25px}.concise-section{padding:55px 0}.compact-privacy{padding:48px 0}.carousel-slide figcaption{min-height:85px;padding:0 6px}.app-carousel{max-width:320px}}
+@media(max-width:620px){.hero h1{font-size:62px}.screenshot-frame{width:min(298px,100%);padding:14px;border-radius:26px}.hero .supporting{font-size:16px}.benefit-grid{grid-template-columns:1fr;gap:25px}.concise-section{padding:55px 0}.compact-privacy{padding:48px 0}.carousel-slide figcaption{min-height:85px;padding:0 6px}.app-carousel{max-width:320px}}
