@@ -10,13 +10,13 @@ Public marketing and support website for Athevia — adaptive training for runni
 
 ## App Store download URL
 
-The live App Store URL is intentionally centralized in `assets/site.js`:
+The live App Store URL is intentionally configured in `docs/assets/site.js` (with an identical copy in `assets/site.js`):
 
 ```js
 const APP_STORE_URL = "";
 ```
 
-Once Apple creates Athevia's public App Store URL, replace the empty string with the URL. Every download CTA on the site updates automatically.
+Once Apple creates Athevia's public App Store URL, replace the empty string with the URL. Every download CTA on the site updates automatically. Keep both copies of the file in sync. Until then, the site clearly says the release is coming soon and provides a working support link.
 
 ## GitHub Pages
 
@@ -42,3 +42,12 @@ Support URL:
 ## Custom domain later
 
 A custom domain can be added later without changing the site structure. Good candidates would be `athevia.app`, `athevia.fit`, or another available brand domain.
+
+
+## Content and screenshots
+
+The homepage uses the supplied Athevia app screenshots for Home, completed workouts, structured swim plans, workout analysis, feedback, Progress, Week Analysis and sign-in. Images are copied without alteration and loaded lazily below the hero.
+
+`docs/` is the publishing source. The root homepage, assets, privacy and support pages mirror it so either Pages source serves a complete site. Keep both copies in sync when editing.
+
+Preview with `python -m http.server 8000 --directory docs`, then open `http://localhost:8000/`.

@@ -1,14 +1,39 @@
+// Set the verified public listing URL here when Athevia is available.
 const APP_STORE_URL = "";
-const links=document.querySelectorAll(".js-download-link");
-const notes=document.querySelectorAll(".js-store-note");
-if(APP_STORE_URL){
-  links.forEach(a=>{a.href=APP_STORE_URL;a.target="_blank";a.rel="noopener noreferrer"});
-  notes.forEach(n=>n.textContent="Available on the App Store.");
-}else{
-  links.forEach(a=>a.addEventListener("click",e=>{e.preventDefault();document.querySelector("#download")?.scrollIntoView({behavior:"smooth"})}));
+
+if (APP_STORE_URL) {
+  document.querySelectorAll('.js-download-link').forEach(link => {
+    link.href = APP_STORE_URL;
+    link.textContent = link.dataset.liveLabel || 'Download on the App Store';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  });
+  document.querySelectorAll('.js-store-note').forEach(note => {
+    note.textContent = 'Available on the App Store.';
+  });
 }
-const year=document.querySelector("#year");if(year)year.textContent=new Date().getFullYear();
-const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add("visible");observer.unobserve(e.target)}}),{threshold:.12});
-document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
-const btn=document.querySelector(".menu-button"),nav=document.querySelector(".site-header nav");
-btn?.addEventListener("click",()=>{const open=nav.classList.toggle("open");btn.setAttribute("aria-expanded",String(open))});
+
+const year = document.querySelector('#year');
+if (year) year.textContent = new Date().getFullYear();
+
+const menuButton = document.querySelector('.menu-button');
+const navigation = document.querySelector('#primary-navigation');
+if (menuButton && navigation) {
+  const closeMenu = () => {
+    navigation.classList.remove('open');
+    menuButton.setAttribute('aria-expanded', 'false');
+    menuButton.setAttribute('aria-label', 'Open navigation');
+  };
+  menuButton.addEventListener('click', () => {
+    const open = navigation.classList.toggle('open');
+    menuButton.setAttribute('aria-expanded', String(open));
+    menuButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  });
+  navigation.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && navigation.classList.contains('open')) {
+      closeMenu();
+      menuButton.focus();
+    }
+  });
+}
