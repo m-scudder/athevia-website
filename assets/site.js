@@ -1,5 +1,5 @@
 // Set the verified public listing URL here when Athevia is available.
-const APP_STORE_URL = "";
+const APP_STORE_URL = "https://apps.apple.com/app/id6814065390";
 
 if (APP_STORE_URL) {
   document.querySelectorAll('.js-download-link').forEach(link => {
