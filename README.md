@@ -13,10 +13,10 @@ Public marketing and support website for Athevia — adaptive training for runni
 The live App Store URL is intentionally configured in `docs/assets/site.js` (with an identical copy in `assets/site.js`):
 
 ```js
-const APP_STORE_URL = "";
+const APP_STORE_URL = "https://apps.apple.com/app/id6814065390";
 ```
 
-Once Apple creates Athevia's public App Store URL, replace the empty string with the URL. Every download CTA on the site updates automatically. Keep both copies of the file in sync. Until then, the site clearly says the release is coming soon and provides a working support link.
+Athevia is live on the App Store. Every download CTA on the site uses this URL automatically. Keep both copies of the file in sync.
 
 ## GitHub Pages
 
