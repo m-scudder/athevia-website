@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#070708">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Internal Athevia product analytics dashboard.">
+  <title>Athevia Analytics</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/dashboard.css?v=20261011">
+</head>
+<body class="dashboard-body">
+<div class="dashboard-shell" data-dashboard-root>
+  <aside class="dashboard-sidebar">
+    <a class="dashboard-brand" href="../" aria-label="Athevia website">
+      <span class="dashboard-brand-mark">A</span>
+      <span>Athevia<small>Product analytics</small></span>
+    </a>
+
+    <nav class="dashboard-nav" aria-label="Analytics sections">
+      <button type="button" data-nav="overview" aria-current="page"><span class="nav-icon">⌁</span>Overview</button>
+      <button type="button" data-nav="users" aria-current="false"><span class="nav-icon">◎</span>Users</button>
+      <button type="button" data-nav="journey" aria-current="false"><span class="nav-icon">↗</span>Training journey</button>
+      <button type="button" data-nav="plans" aria-current="false"><span class="nav-icon">◇</span>Plan intelligence</button>
+      <button type="button" data-nav="operations" aria-current="false"><span class="nav-icon">⌚</span>Watch &amp; imports</button>
+      <button type="button" data-nav="events" aria-current="false"><span class="nav-icon">≡</span>Event stream</button>
+      <button type="button" data-nav="setup" aria-current="false"><span class="nav-icon">⚙</span>Data connection</button>
+    </nav>
+
+    <div class="dashboard-sidebar-footer">
+      <div class="status-pill"><span class="status-dot"></span><span data-source-label>Demo data</span></div>
+      <p>Private admin surface. Real analytics must be served only after authenticated access is added.</p>
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+    <header class="dashboard-topbar">
+      <div class="dashboard-title">
+        <h1 id="view-title">Product overview</h1>
+        <p id="view-subtitle">Monitor engagement, activation and recent product activity.</p>
+      </div>
+      <div class="dashboard-actions">
+        <select class="dashboard-select" id="environment-select" aria-label="Environment">
+          <option value="production">Production</option>
+          <option value="testflight">TestFlight</option>
+          <option value="development">Development</option>
+        </select>
+        <select class="dashboard-select" id="range-select" aria-label="Date range">
+          <option value="24h">Last 24 hours</option>
+          <option value="7d" selected>Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="90d">Last 90 days</option>
+        </select>
+        <button class="dashboard-select" type="button" id="refresh-dashboard">Refresh</button>
+      </div>
+    </header>
+
+    <div class="demo-banner" id="demo-banner">
+      <span data-demo-message><strong>Demo mode.</strong> The dashboard is intentionally not connected to production analytics yet.</span>
+      <span>Supabase adapter pending authenticated API</span>
+    </div>
+
+    <section class="dashboard-view" data-view="overview">
+      <div class="metric-grid" id="metric-grid"></div>
+
+      <div class="dashboard-grid">
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Active users</h2><p>Daily product activity across the selected period.</p></div>
+            <span class="tiny-pill">14-day trend</span>
+          </div>
+          <div class="chart-wrap" id="activity-chart"></div>
+        </article>
+
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Onboarding activation</h2><p>Users progressing from setup to first workout.</p></div>
+          </div>
+          <div class="funnel" id="onboarding-funnel"></div>
+        </article>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Recent product activity</h2><p>High-signal actions from the event stream.</p></div>
+          </div>
+          <div class="activity-list" id="recent-activity"></div>
+        </article>
+
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Workout mix</h2><p>Completed workouts by sport.</p></div>
+          </div>
+          <div class="breakdown" id="sport-breakdown"></div>
+          <div class="legend-row" style="margin-top:20px">
+            <span><i class="legend-dot" style="background:#4195ef"></i>Run</span>
+            <span><i class="legend-dot" style="background:#54d76a"></i>Cycle</span>
+            <span><i class="legend-dot" style="background:#a78bfa"></i>Swim</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="users" hidden>
+      <div class="section-intro">
+        <h2>Beta user activity</h2>
+        <p>Search and drill into user-level product journeys once the authenticated analytics API is connected.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="dashboard-table">
+          <thead><tr><th>User</th><th>Last seen</th><th>Sessions</th><th>Workouts</th><th>Status</th></tr></thead>
+          <tbody id="users-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="journey" hidden>
+      <div class="section-intro">
+        <h2>Training journey funnel</h2>
+        <p>Measure whether generated training turns into completed weeks instead of only app opens.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="dashboard-table">
+          <thead><tr><th>Stage</th><th>Users</th><th>Relative volume</th><th>Conversion</th></tr></thead>
+          <tbody id="journey-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="plans" hidden>
+      <div class="two-column">
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Why plans change</h2><p>Profile and schedule changes that rebuilt future training.</p></div>
+          </div>
+          <div id="plan-change-list"></div>
+        </article>
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Plan observability</h2><p>Recommended semantic events for the deterministic engine.</p></div>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item"><div class="activity-icon">1</div><div class="activity-copy"><b>profile_updated</b><span>What athlete-facing configuration changed.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">2</div><div class="activity-copy"><b>plan_regenerated</b><span>Why the engine rebuilt the unresolved future plan.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">3</div><div class="activity-copy"><b>workout_prescription_changed</b><span>Which planned workouts materially changed.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">4</div><div class="activity-copy"><b>plan_update_explanation_viewed</b><span>Whether the athlete noticed the explanation.</span></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="operations" hidden>
+      <div class="two-column">
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Apple Watch funnel</h2><p>From scheduling request through sync and plan matching.</p></div>
+          </div>
+          <div class="funnel" id="watch-funnel"></div>
+        </article>
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>HealthKit import funnel</h2><p>Import discovery, persistence and plan matching.</p></div>
+          </div>
+          <div class="funnel" id="import-funnel"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="events" hidden>
+      <div class="section-intro">
+        <h2>Semantic event stream</h2>
+        <p>Designed for debugging product behavior without copying health data into analytics.</p>
+      </div>
+      <div class="filter-row">
+        <div id="event-filters">
+          <button class="filter-button" type="button" data-event-filter="all" aria-pressed="true">All</button>
+          <button class="filter-button" type="button" data-event-filter="success" aria-pressed="false">Success</button>
+          <button class="filter-button" type="button" data-event-filter="fail" aria-pressed="false">Failures</button>
+          <button class="filter-button" type="button" data-event-filter="info" aria-pressed="false">State changes</button>
+        </div>
+        <input class="dashboard-search" id="event-search" type="search" placeholder="Search event, user or context" aria-label="Search events">
+      </div>
+      <div class="table-wrap">
+        <table class="dashboard-table">
+          <thead><tr><th>Time</th><th>Event</th><th>User</th><th>Context</th><th>Outcome</th></tr></thead>
+          <tbody id="events-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="dashboard-view" data-view="setup" hidden>
+      <div class="section-intro">
+        <h2>Connect real analytics safely</h2>
+        <p>The dashboard UI is ready. Real analytics remain deliberately disconnected until admin authentication and server-side authorization exist.</p>
+      </div>
+      <div class="two-column">
+        <article class="dashboard-panel provider-card">
+          <div>
+            <h2 style="margin:0 0 6px;font-size:15px">Dashboard data provider</h2>
+            <p class="muted" style="margin:0">The UI expects one provider method and does not depend on PostHog.</p>
+          </div>
+          <span class="badge info">Ready</span>
+          <code>window.AtheviaAnalyticsDataProvider.loadDashboard({ range, environment })</code>
+        </article>
+        <article class="dashboard-panel">
+          <div class="panel-head">
+            <div><h2>Backend requirements</h2><p>Do these before production data is exposed.</p></div>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Authenticated admin session</b><span>Never authorize access from a client-side boolean.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Read-only analytics API</b><span>Supabase Edge Function or protected server endpoint.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Allow-listed event schema</b><span>No raw health metrics, GPS routes, pain notes or coach text.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Aggregated views</b><span>Keep expensive dashboard queries away from primary app tables.</span></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="../assets/dashboard.js?v=20261011"></script>
+</body>
+</html>

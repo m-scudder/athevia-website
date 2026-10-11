@@ -7,6 +7,7 @@ Public marketing and support website for Athevia — adaptive training for runni
 - `/` — product marketing website
 - `/privacy/` — privacy policy for App Store Connect
 - `/support/` — public support page for App Store Connect
+- `/dashboard/` — internal analytics dashboard shell (demo data only until authenticated analytics access is wired)
 
 ## App Store download URL
 
@@ -51,3 +52,10 @@ The homepage uses one autoplay carousel with five selected app screens. Slides a
 `docs/` is the publishing source. The root homepage, assets, privacy and support pages mirror it so either Pages source serves a complete site. Keep both copies in sync when editing.
 
 Preview with `python -m http.server 8000 --directory docs`, then open `http://localhost:8000/`.
+
+
+## Analytics dashboard
+
+The analytics dashboard lives at `/dashboard/` and is mirrored into `docs/dashboard/` for the current GitHub Pages layout.
+
+The current implementation deliberately uses demo data. This repository and GitHub Pages deployment are public, so production analytics must not be exposed until server-side admin authorization is implemented. See [ANALYTICS_DASHBOARD.md](ANALYTICS_DASHBOARD.md) for the provider contract, event policy and Supabase integration plan.
