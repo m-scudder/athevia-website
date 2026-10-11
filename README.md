@@ -7,7 +7,7 @@ Public marketing and support website for Athevia — adaptive training for runni
 - `/` — product marketing website
 - `/privacy/` — privacy policy for App Store Connect
 - `/support/` — public support page for App Store Connect
-- `/dashboard/` — internal analytics dashboard shell (demo data only until authenticated analytics access is wired)
+- `/dashboard/` — private authenticated analytics dashboard backed by Supabase
 
 ## App Store download URL
 
@@ -58,4 +58,4 @@ Preview with `python -m http.server 8000 --directory docs`, then open `http://lo
 
 The analytics dashboard lives at `/dashboard/` and is mirrored into `docs/dashboard/` for the current GitHub Pages layout.
 
-The current implementation deliberately uses demo data. This repository and GitHub Pages deployment are public, so production analytics must not be exposed until server-side admin authorization is implemented. See [ANALYTICS_DASHBOARD.md](ANALYTICS_DASHBOARD.md) for the provider contract, event policy and Supabase integration plan.
+The dashboard is connected to a JWT-protected Supabase Edge Function. Only users present in the server-side `analytics_admins` allowlist can read analytics or athlete plan data. Athlete drill-downs are derived from the latest immutable cloud backup revision and expose plan structure/completion without exposing GPS routes or free-form health text. See [ANALYTICS_DASHBOARD.md](ANALYTICS_DASHBOARD.md) for the architecture and security contract.
