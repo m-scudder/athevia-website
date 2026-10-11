@@ -11,7 +11,22 @@
   <link rel="stylesheet" href="../assets/dashboard.css?v=20261011">
 </head>
 <body class="dashboard-body">
-<div class="dashboard-shell" data-dashboard-root>
+<section class="auth-gate" id="auth-gate">
+  <form class="auth-card" id="admin-signin-form">
+    <span class="dashboard-brand-mark">A</span>
+    <div>
+      <p class="eyebrow">PRIVATE ADMIN</p>
+      <h1>Athevia analytics</h1>
+      <p>Sign in with the email attached to the authorized Athevia admin account. A secure magic link will be sent to that address.</p>
+    </div>
+    <label for="admin-email">Admin email</label>
+    <input id="admin-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+    <button type="submit" class="auth-primary" id="admin-signin-button">Send sign-in link</button>
+    <p class="auth-status" id="auth-status" aria-live="polite"></p>
+  </form>
+</section>
+
+<div class="dashboard-shell" data-dashboard-root hidden>
   <aside class="dashboard-sidebar">
     <a class="dashboard-brand" href="../" aria-label="Athevia website">
       <span class="dashboard-brand-mark">A</span>
@@ -53,12 +68,13 @@
           <option value="90d">Last 90 days</option>
         </select>
         <button class="dashboard-select" type="button" id="refresh-dashboard">Refresh</button>
+        <button class="dashboard-select" type="button" id="dashboard-signout">Sign out</button>
       </div>
     </header>
 
-    <div class="demo-banner" id="demo-banner">
-      <span data-demo-message><strong>Demo mode.</strong> The dashboard is intentionally not connected to production analytics yet.</span>
-      <span>Supabase adapter pending authenticated API</span>
+    <div class="demo-banner" id="demo-banner" hidden>
+      <span data-demo-message></span>
+      <span>Secure Supabase analytics</span>
     </div>
 
     <section class="dashboard-view" data-view="overview">
@@ -105,12 +121,12 @@
 
     <section class="dashboard-view" data-view="users" hidden>
       <div class="section-intro">
-        <h2>Beta user activity</h2>
-        <p>Search and drill into user-level product journeys once the authenticated analytics API is connected.</p>
+        <h2>Athlete plans & completion</h2>
+        <p>Select any athlete to inspect their current and historical weekly plans, prescribed workouts and completion state.</p>
       </div>
       <div class="table-wrap">
         <table class="dashboard-table">
-          <thead><tr><th>User</th><th>Last seen</th><th>Sessions</th><th>Workouts</th><th>Status</th></tr></thead>
+          <thead><tr><th>User</th><th>Last seen</th><th>Sessions</th><th>Completed</th><th>Plan weeks</th><th>Plan completion</th><th>Status</th></tr></thead>
           <tbody id="users-table-body"></tbody>
         </table>
       </div>
@@ -192,8 +208,8 @@
 
     <section class="dashboard-view" data-view="setup" hidden>
       <div class="section-intro">
-        <h2>Connect real analytics safely</h2>
-        <p>The dashboard UI is ready. Real analytics remain deliberately disconnected until admin authentication and server-side authorization exist.</p>
+        <h2>Live analytics connection</h2>
+        <p>This dashboard now reads through a JWT-protected Supabase Edge Function and an explicit server-side admin allowlist.</p>
       </div>
       <div class="two-column">
         <article class="dashboard-panel provider-card">
@@ -201,24 +217,36 @@
             <h2 style="margin:0 0 6px;font-size:15px">Dashboard data provider</h2>
             <p class="muted" style="margin:0">The UI expects one provider method and does not depend on PostHog.</p>
           </div>
-          <span class="badge info">Ready</span>
-          <code>window.AtheviaAnalyticsDataProvider.loadDashboard({ range, environment })</code>
+          <span class="badge success">Connected</span>
+          <code>Supabase Auth → analytics-dashboard Edge Function → private analytics/read models</code>
         </article>
         <article class="dashboard-panel">
           <div class="panel-head">
             <div><h2>Backend requirements</h2><p>Do these before production data is exposed.</p></div>
           </div>
           <div class="activity-list">
-            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Authenticated admin session</b><span>Never authorize access from a client-side boolean.</span></div></div>
-            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Read-only analytics API</b><span>Supabase Edge Function or protected server endpoint.</span></div></div>
-            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Allow-listed event schema</b><span>No raw health metrics, GPS routes, pain notes or coach text.</span></div></div>
-            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Aggregated views</b><span>Keep expensive dashboard queries away from primary app tables.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Authenticated admin session</b><span>Supabase verifies the browser session before any analytics data is returned.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Explicit admin allowlist</b><span>Normal athlete accounts receive no dashboard access.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Private semantic event stream</b><span>App events are ingested server-side with the user derived from the verified JWT.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Training plan drill-down</b><span>Latest cloud backups provide plans, steps, status and recorded completion without exposing GPS routes.</span></div></div>
           </div>
         </article>
       </div>
     </section>
   </main>
+  <aside class="user-drawer" id="user-detail" hidden aria-label="Athlete training plan">
+    <div class="user-drawer-head">
+      <div>
+        <p class="eyebrow">ATHLETE DETAIL</p>
+        <h2 id="user-detail-title">Training plan</h2>
+        <p id="user-detail-subtitle"></p>
+      </div>
+      <button type="button" class="drawer-close" id="user-detail-close" aria-label="Close athlete detail">×</button>
+    </div>
+    <div id="user-detail-content"></div>
+  </aside>
 </div>
-<script src="../assets/dashboard.js?v=20261011"></script>
+<script src="../assets/dashboard-provider.js?v=20261011-live"></script>
+<script src="../assets/dashboard.js?v=20261011-live"></script>
 </body>
 </html>
