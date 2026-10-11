@@ -1,151 +1,95 @@
 # Athevia Analytics Dashboard
 
-The dashboard UI lives at `/dashboard/` and is intentionally provider-driven.
+The private dashboard lives at `/dashboard/` and is mirrored into `docs/dashboard/` for GitHub Pages.
 
-## Current state
-
-The initial dashboard is a functional UI prototype with demo data. It is **not connected to production user analytics**.
-
-The public website is deployed from `docs/` through GitHub Pages, so real analytics must not be loaded until the dashboard has authenticated admin access and a server-authorized read API.
-
-## Data flow
+## Current architecture
 
 ```text
 Athevia iOS / Watch
         |
         v
-Authenticated analytics ingestion
+analytics-ingest Edge Function
         |
         v
-Supabase analytics schema
+public.analytics_events
         |
-        +--> immutable analytics.events
-        +--> aggregated analytics views
-        |
-        v
-Authenticated admin analytics API
-        |
-        v
-Athevia dashboard data provider
+        +-------------------+
+        |                   |
+        v                   v
+latest cloud backups    semantic events
+        |                   |
+        +---------+---------+
+                  v
+      analytics-dashboard Edge Function
+                  |
+                  v
+      authenticated admin dashboard
 ```
 
-The browser dashboard must never contain a Supabase service-role key.
+The browser uses only the Supabase publishable key. No service-role key is shipped to the website.
 
-## Dashboard provider contract
+## Authorization
 
-The UI checks for:
+The dashboard requires a valid Supabase Auth session. The `analytics-dashboard` Edge Function then verifies that the authenticated user exists in `public.analytics_admins`.
 
-```js
-window.AtheviaAnalyticsDataProvider = {
-  async loadDashboard({ range, environment }) {
-    // Return dashboard data.
-  }
-}
-```
+Normal athlete accounts cannot read analytics data even if they discover the dashboard URL.
 
-If no provider is present or loading fails, the dashboard falls back to clearly labeled demo data.
+Direct client access to `analytics_events` and `analytics_admins` is explicitly denied. Edge Functions use the service role server-side after authorization.
 
-Recommended server response:
+## Athlete plan drill-down
 
-```json
-{
-  "summary": {
-    "activeUsers": 128,
-    "sessions": 342,
-    "workoutsCompleted": 219,
-    "completionRate": 74,
-    "activeUsersTrend": "+12% vs prior 7d",
-    "sessionsTrend": "+8% vs prior 7d",
-    "workoutsTrend": "+17% vs prior 7d",
-    "completionTrend": "+4.2 pts vs prior 7d"
-  },
-  "activitySeries": [41, 52, 49, 61],
-  "onboarding": [
-    ["Starting point", 100],
-    ["Schedule", 86],
-    ["Plan preview", 78],
-    ["Completed", 71],
-    ["First workout", 54]
-  ],
-  "sports": [
-    { "label": "Running", "value": 48, "color": "#4195ef" }
-  ],
-  "recentActivity": [],
-  "users": [],
-  "journey": [],
-  "planChanges": [],
-  "watch": [],
-  "imports": [],
-  "events": []
-}
-```
+The dashboard can open an athlete and display:
 
-## Event policy
+- plan weeks
+- plan status and generation reason
+- week completion percentage
+- planned workouts
+- workout status (planned/completed/skipped)
+- prescribed distance or duration
+- structured workout steps
+- completion timestamp
+- recorded aggregate distance/duration when available
 
-Analytics should describe product behavior, not duplicate HealthKit.
+The dashboard intentionally does not return:
 
-Allowed examples:
+- GPS route points
+- heart-rate samples or detailed health metrics
+- pain/recovery response details
+- coach conversation text
+- free-form athlete notes
 
-- `app_opened`
-- `screen_viewed`
-- `onboarding_step_viewed`
-- `onboarding_completed`
-- `profile_updated`
-- `plan_generated`
-- `plan_regenerated`
-- `workout_prescription_changed`
-- `workout_viewed`
-- `workout_started`
-- `workout_completed`
-- `workout_skipped`
-- `workout_moved`
-- `plan_update_explanation_viewed`
-- `send_to_watch_requested`
-- `send_to_watch_succeeded`
-- `send_to_watch_failed`
-- `healthkit_import_started`
-- `healthkit_import_completed`
-- `healthkit_import_failed`
-- `workout_matched`
+The latest immutable `backup_revisions.snapshot` is the source for plan detail.
 
-Allowed structured dimensions include:
+## Event ingestion
 
-- sport
-- workout prescription basis
-- training phase
-- event outcome
-- app environment
-- plan regeneration reason
-- affected workout count
-- selected weekly training frequency
+The updated iOS app sends allow-listed semantic product events to `analytics-ingest`.
 
-Do not send:
+The Edge Function derives `user_id` from the verified JWT. The client cannot choose another athlete's identity.
 
-- heart rate
-- GPS routes
-- raw HealthKit samples
-- DOB
-- pain/free-form feedback text
-- coach conversations
-- arbitrary user-entered text
+Allowed properties are explicitly allow-listed. Arbitrary JSON and free-form strings are rejected.
 
-## Security requirements before live data
+Existing cloud plan data is available immediately. The semantic event stream begins populating when users run an app build containing `SupabaseAnalyticsTransport`.
 
-1. Admin authentication is mandatory.
-2. Authorization must be enforced server-side.
-3. The analytics API should be read-only for the dashboard.
-4. Service-role credentials stay server-side.
-5. Event ingestion validates a fixed event/property schema.
-6. User-level lookup should be available only to approved admin accounts.
-7. Aggregate dashboard queries should come from analytics views rather than scanning application backup tables.
+## Dashboard sign-in
 
-## Planned backend work
+The static dashboard uses Supabase passwordless email sign-in. The email must belong to an authorized admin account.
 
-1. Create the Supabase analytics schema.
-2. Create an authenticated ingestion Edge Function.
-3. Add an Athevia analytics transport that posts the existing semantic event envelope.
-4. Create daily/session/funnel aggregate views.
-5. Create an authenticated read Edge Function for this dashboard.
-6. Implement `AtheviaAnalyticsDataProvider` against that endpoint.
-7. Add admin auth and access-denied states.
-8. Replace demo fixtures with live data.
+If the deployment host changes, add the dashboard URL to the Supabase Auth redirect allowlist before relying on email magic-link redirects.
+
+## Source locations
+
+Website:
+
+- `dashboard/index.html`
+- `assets/dashboard.js`
+- `assets/dashboard-provider.js`
+- `assets/dashboard.css`
+- mirrored `docs/` copies for GitHub Pages
+
+App/backend:
+
+- `Athevia/Data/Analytics/SupabaseAnalyticsTransport.swift`
+- `supabase/functions/analytics-ingest/`
+- `supabase/functions/analytics-dashboard/`
+- `supabase/migrations/20261011064013_create_custom_analytics_backend.sql`
+- `supabase/migrations/20261011064658_explicitly_deny_direct_analytics_access.sql`
