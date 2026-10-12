@@ -320,22 +320,209 @@
     }).join('')}</div>`;
   }
 
+  function rpeText(value) {
+    if (!value) return '—';
+    if (typeof value === 'number') return `${value} / 10`;
+    if (value.lower != null && value.upper != null) return `${value.lower}–${value.upper} / 10`;
+    return '—';
+  }
+
+  function prettyEnum(value) {
+    if (!value) return '—';
+    return String(value)
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replaceAll('_', ' ')
+      .replace(/^./, c => c.toUpperCase());
+  }
+
+  function painLabel(value) {
+    const score = Number(value);
+    if (!Number.isFinite(score)) return '—';
+    if (score <= 0) return 'No pain';
+    if (score <= 2) return 'Barely noticeable';
+    if (score <= 4) return 'Mild';
+    if (score <= 6) return 'Moderate';
+    if (score <= 8) return 'Severe';
+    return 'Worst possible';
+  }
+
+  function averageRecordedMetric(workout) {
+    const recorded = workout.recorded;
+    if (!recorded?.distanceMeters || !recorded?.durationSeconds) return { label: 'Avg Speed', value: '—' };
+    const distance = Number(recorded.distanceMeters);
+    const duration = Number(recorded.durationSeconds);
+    if (!(distance > 0) || !(duration > 0)) return { label: 'Avg Speed', value: '—' };
+
+    if (workout.discipline === 'running') {
+      const seconds = Math.round(duration / (distance / 1000));
+      return { label: 'Avg Pace', value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} /km` };
+    }
+    if (workout.discipline === 'swimming') {
+      const seconds = Math.round(duration / (distance / 100));
+      return { label: 'Avg Pace', value: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} /100m` };
+    }
+    return { label: 'Avg Speed', value: `${(distance / duration * 3.6).toFixed(1)} km/h` };
+  }
+
+  function renderRecordedSummary(workout) {
+    const recorded = workout.recorded;
+    if (!recorded) return '';
+    const average = averageRecordedMetric(workout);
+    const metrics = recorded.metrics || {};
+    const cells = [
+      ['Workout Time', formatDuration(recorded.durationSeconds) || '—'],
+      ['Distance', formatDistance(recorded.distanceMeters) || '—'],
+      ['Active Calories', metrics.activeEnergyKilocalories != null ? `${Math.round(metrics.activeEnergyKilocalories)} kcal` : '—'],
+      ['Total Calories', '—'],
+      [average.label, average.value],
+      ['Avg Heart Rate', recorded.averageHeartRate != null ? `${Math.round(recorded.averageHeartRate)} bpm` : '—']
+    ];
+
+    const advanced = [
+      ['Max Heart Rate', recorded.maximumHeartRate != null ? `${Math.round(recorded.maximumHeartRate)} bpm` : null],
+      ['Elevation', recorded.elevationAscendedMeters != null ? `${Math.round(recorded.elevationAscendedMeters)} m` : null],
+      ['Swim Lengths', recorded.swimmingLengths],
+      ['Stroke Count', recorded.swimmingStrokeCount != null ? Math.round(recorded.swimmingStrokeCount) : null],
+      ['Longest Continuous', formatDistance(recorded.longestContinuousSwimMeters)],
+      ['Avg Cadence', metrics.averageCadence != null ? `${Math.round(metrics.averageCadence)} spm` : null],
+      ['Running Power', metrics.averageRunningPower != null ? `${Math.round(metrics.averageRunningPower)} W` : null],
+      ['Stride Length', metrics.averageStrideLength != null ? `${Number(metrics.averageStrideLength).toFixed(2)} m` : null],
+      ['Ground Contact', metrics.averageGroundContactTime != null ? `${Math.round(metrics.averageGroundContactTime)} ms` : null],
+      ['Vertical Oscillation', metrics.averageVerticalOscillation != null ? `${Number(metrics.averageVerticalOscillation).toFixed(1)} cm` : null],
+      ['Cycling Cadence', metrics.averageCyclingCadence != null ? `${Math.round(metrics.averageCyclingCadence)} rpm` : null],
+      ['Cycling Power', metrics.averageCyclingPower != null ? `${Math.round(metrics.averageCyclingPower)} W` : null]
+    ].filter(([, value]) => value != null && value !== '');
+
+    return `
+      <section class="mirror-section">
+        <div class="mirror-eyebrow">RECORDED WORKOUT</div>
+        <div class="recorded-grid">
+          ${cells.map(([label, value]) => `
+            <div class="recorded-cell"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>
+          `).join('')}
+        </div>
+        ${advanced.length ? `
+          <div class="advanced-metrics">
+            ${advanced.map(([label, value]) => `
+              <div><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>
+            `).join('')}
+          </div>
+        ` : ''}
+        <div class="mirror-source">Source: ${escapeHTML(recorded.source || 'Imported workout')} · Imported ${escapeHTML(formatDateTime(recorded.importedAt))}</div>
+      </section>
+    `;
+  }
+
+  function renderFeedback(workout) {
+    const feedback = workout.feedback;
+    if (!feedback) {
+      return workout.status === 'completed'
+        ? '<section class="mirror-section"><div class="mirror-eyebrow">YOUR REPORT</div><div class="mirror-empty">Completed · feedback not submitted</div></section>'
+        : '';
+    }
+    const locations = (feedback.painLocations || []).map(prettyEnum).join(', ');
+    const symptoms = (feedback.symptoms || []).map(prettyEnum).join(', ');
+    return `
+      <section class="mirror-section">
+        <div class="mirror-eyebrow">YOUR REPORT</div>
+        <div class="feedback-topline">
+          <div><span>Effort</span><strong>${escapeHTML(feedback.rpe)} / 10</strong><small>${escapeHTML(prettyEnum(feedback.recoveryFeeling))} recovery</small></div>
+          <div><span>Pain</span><strong>${escapeHTML(feedback.painScore)} / 10</strong><small>${escapeHTML(painLabel(feedback.painScore))}</small></div>
+        </div>
+        <div class="mirror-list">
+          <div><span>Recovery</span><strong>${escapeHTML(prettyEnum(feedback.recoveryFeeling))}</strong></div>
+          ${locations ? `<div><span>Location</span><strong>${escapeHTML(locations)}</strong></div>` : ''}
+          ${symptoms ? `<div><span>Symptoms</span><strong>${escapeHTML(symptoms)}</strong></div>` : ''}
+          <div><span>Reported</span><strong>${escapeHTML(formatDateTime(feedback.createdAt))}</strong></div>
+        </div>
+        <p class="mirror-note">Free-form feedback notes are not included in the current cloud backup format.</p>
+      </section>
+    `;
+  }
+
+  function renderRecovery(workout) {
+    const recovery = workout.recoveryCheckIn;
+    if (!recovery) return '';
+    const symptoms = (recovery.symptoms || []).map(prettyEnum).join(', ');
+    return `
+      <section class="mirror-section">
+        <div class="mirror-eyebrow">NEXT-DAY CHECK-IN</div>
+        <div class="mirror-list">
+          <div><span>Pain</span><strong>${escapeHTML(recovery.painScore)} / 10 · ${escapeHTML(painLabel(recovery.painScore))}</strong></div>
+          <div><span>Soreness</span><strong>${escapeHTML(prettyEnum(recovery.soreness))}</strong></div>
+          <div><span>Energy</span><strong>${escapeHTML(prettyEnum(recovery.energy))}</strong></div>
+          ${symptoms ? `<div><span>Symptoms</span><strong>${escapeHTML(symptoms)}</strong></div>` : ''}
+          <div><span>Checked in</span><strong>${escapeHTML(formatDateTime(recovery.createdAt))}</strong></div>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderPrescription(workout) {
+    return `
+      <section class="mirror-section">
+        <div class="mirror-eyebrow">PLANNED WORKOUT</div>
+        ${workout.goal ? `<p class="mirror-goal">${escapeHTML(workout.goal)}</p>` : ''}
+        <div class="prescription-summary">
+          <div><span>Target</span><strong>${escapeHTML(workoutTarget(workout))}</strong></div>
+          <div><span>Target effort</span><strong>${escapeHTML(rpeText(workout.targetRPE))}</strong></div>
+          <div><span>Origin</span><strong>${escapeHTML(prettyEnum(workout.origin))}</strong></div>
+        </div>
+        ${renderSteps(workout.steps)}
+      </section>
+    `;
+  }
+
+  function renderWorkoutMirror(workout) {
+    const stateClass = workout.status === 'completed' ? 'success' : workout.status === 'skipped' ? 'fail' : 'info';
+    return `
+      <article class="athlete-workout">
+        <div class="athlete-workout-header">
+          <div class="sport-orb">${escapeHTML(String(workout.discipline || '?').slice(0,1).toUpperCase())}</div>
+          <div class="athlete-workout-title">
+            <span>${escapeHTML(formatDate(workout.date))} · ${escapeHTML(prettyEnum(workout.discipline))}</span>
+            <h3>${escapeHTML(workout.title)}</h3>
+            <small>${escapeHTML(workoutTarget(workout))}</small>
+          </div>
+          <span class="badge ${stateClass}">${escapeHTML(workout.status)}</span>
+        </div>
+        ${workout.status === 'skipped' ? '<div class="state-banner skipped"><strong>Skipped</strong><span>This session was deliberately skipped.</span></div>' : ''}
+        ${renderRecordedSummary(workout)}
+        ${renderFeedback(workout)}
+        ${renderRecovery(workout)}
+        ${renderPrescription(workout)}
+      </article>
+    `;
+  }
+
   function renderUserDetail(detail) {
     $('#user-detail-title').textContent = detail.user?.name || 'Athlete';
-    $('#user-detail-subtitle').textContent = [detail.user?.email, `Last backup ${relativeTime(detail.user?.lastBackupAt)}`].filter(Boolean).join(' · ');
+    $('#user-detail-subtitle').textContent = [
+      detail.user?.email,
+      `Last backup ${relativeTime(detail.user?.lastBackupAt)}`
+    ].filter(Boolean).join(' · ');
 
     const plans = detail.plans ?? [];
     const latest = plans[plans.length - 1];
     const content = $('#user-detail-content');
     content.innerHTML = `
-      <div class="user-detail-metrics">
-        <div><span>Plan weeks</span><strong>${plans.length}</strong></div>
-        <div><span>Current completion</span><strong>${latest?.completion?.percentage ?? 0}%</strong></div>
-        <div><span>Experience</span><strong>${escapeHTML(detail.profile?.experienceLevel ?? '—')}</strong></div>
+      <div class="mirror-profile">
+        <div><span>Experience</span><strong>${escapeHTML(prettyEnum(detail.profile?.experienceLevel))}</strong></div>
+        <div><span>Training since</span><strong>${escapeHTML(formatDate(detail.profile?.trainingStartDate))}</strong></div>
+        <div><span>Pool</span><strong>${escapeHTML(detail.profile?.poolLengthMeters ? `${detail.profile.poolLengthMeters} m` : '—')}</strong></div>
+        <div><span>Current week</span><strong>${escapeHTML(latest ? `Week ${latest.weekNumber}` : '—')}</strong></div>
+        <div><span>Completion</span><strong>${escapeHTML(latest?.completion?.percentage ?? 0)}%</strong></div>
+        <div><span>Cloud snapshot</span><strong>${escapeHTML(formatDateTime(detail.snapshotCreatedAt))}</strong></div>
       </div>
+
+      <div class="app-mirror-notice">
+        <strong>Athlete app mirror</strong>
+        <span>This view uses the same cloud-backed plan, workout, feedback and recovery records that restore into the app. HealthKit-only charts and GPS routes remain device-local.</span>
+      </div>
+
       <div class="plan-week-list">
         ${plans.slice().reverse().map((plan, index) => `
-          <details class="plan-week" ${index === 0 ? 'open' : ''}>
+          <details class="plan-week mirror-week" ${index === 0 ? 'open' : ''}>
             <summary>
               <div>
                 <strong>Week ${escapeHTML(plan.weekNumber)}</strong>
@@ -346,25 +533,11 @@
                 <strong>${escapeHTML(plan.completion?.completed ?? 0)}/${escapeHTML(plan.completion?.planned ?? 0)}</strong>
               </div>
             </summary>
-            <div class="week-reason">${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}</div>
-            <div class="workout-plan-list">
-              ${(plan.workouts ?? []).map(workout => `
-                <article class="workout-plan-card">
-                  <div class="workout-plan-head">
-                    <div>
-                      <span class="workout-date">${escapeHTML(formatDate(workout.date))} · ${escapeHTML(workout.discipline)}</span>
-                      <h3>${escapeHTML(workout.title)}</h3>
-                    </div>
-                    <span class="badge ${workout.status === 'completed' ? 'success' : workout.status === 'skipped' ? 'fail' : 'info'}">${escapeHTML(workout.status)}</span>
-                  </div>
-                  <div class="workout-targets">
-                    <div><span>Prescribed</span><strong>${escapeHTML(workoutTarget(workout))}</strong></div>
-                    <div><span>Recorded</span><strong>${escapeHTML(recordedTarget(workout) || '—')}</strong></div>
-                    <div><span>Completed</span><strong>${escapeHTML(formatDateTime(workout.completedAt))}</strong></div>
-                  </div>
-                  ${renderSteps(workout.steps)}
-                </article>
-              `).join('')}
+            <div class="week-reason">
+              ${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}
+            </div>
+            <div class="athlete-workout-list">
+              ${(plan.workouts ?? []).map(renderWorkoutMirror).join('')}
             </div>
           </details>
         `).join('') || '<div class="empty-state"><b>No plan available</b>This account does not yet have a cloud-backed training plan.</div>'}
