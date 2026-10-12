@@ -1,44 +1,38 @@
 (() => {
   const SUPABASE_URL = "https://njrbzobygmewfdfwcvqc.supabase.co";
   const SUPABASE_KEY = "sb_publishable_nYbFcvkWKM7gL9JLCDLELw_dOsuuF-0";
+  const TOKEN_KEY = "athevia.analytics.adminSession.v1";
 
-  let clientPromise;
-  function getClient() {
-    if (!clientPromise) {
-      clientPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.95.0/+esm")
-        .then(({ createClient }) => createClient(SUPABASE_URL, SUPABASE_KEY, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-          }
-        }));
-    }
-    return clientPromise;
+  function token() {
+    return sessionStorage.getItem(TOKEN_KEY);
   }
 
-  async function invoke(body) {
-    const client = await getClient();
-    const { data: { session }, error: sessionError } = await client.auth.getSession();
-    if (sessionError) throw sessionError;
-    if (!session) {
-      const error = new Error("AUTH_REQUIRED");
-      error.code = "AUTH_REQUIRED";
-      throw error;
+  async function request(path, body, includeSession = true) {
+    const headers = {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_KEY
+    };
+    if (includeSession) {
+      const value = token();
+      if (!value) {
+        const error = new Error("AUTH_REQUIRED");
+        error.code = "AUTH_REQUIRED";
+        throw error;
+      }
+      headers["x-athevia-admin-token"] = value;
     }
 
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/analytics-dashboard`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/${path}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${session.access_token}`
-      },
+      headers,
       body: JSON.stringify(body)
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (response.status === 401 && includeSession) {
+        sessionStorage.removeItem(TOKEN_KEY);
+      }
       const error = new Error(payload.error || `HTTP_${response.status}`);
       error.status = response.status;
       error.code = payload.error;
@@ -48,50 +42,49 @@
   }
 
   window.AtheviaAnalyticsAuth = {
-    async session() {
-      const client = await getClient();
-      const { data, error } = await client.auth.getSession();
-      if (error) throw error;
-      return data.session;
+    session() {
+      return token() ? { active: true } : null;
     },
 
-    async sendMagicLink(email) {
-      const client = await getClient();
+    async signIn(email, password) {
       const normalized = String(email || "").trim().toLowerCase();
       if (!normalized || !normalized.includes("@")) {
-        throw new Error("Enter a valid email address.");
+        throw new Error("Enter a valid admin email address.");
       }
-      const { error } = await client.auth.signInWithOtp({
-        email: normalized,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: window.location.href.split("#")[0]
-        }
-      });
-      if (error) throw error;
+      if (!password) {
+        throw new Error("Enter the admin password.");
+      }
+
+      const payload = await request(
+        "analytics-admin-login",
+        { email: normalized, password },
+        false
+      );
+      sessionStorage.setItem(TOKEN_KEY, payload.token);
+      return payload;
     },
 
-    async signOut() {
-      const client = await getClient();
-      const { error } = await client.auth.signOut();
-      if (error) throw error;
-    },
-
-    async onAuthStateChange(callback) {
-      const client = await getClient();
-      return client.auth.onAuthStateChange((_event, session) => callback(session));
+    signOut() {
+      sessionStorage.removeItem(TOKEN_KEY);
     }
   };
 
   window.AtheviaAnalyticsDataProvider = {
     loadDashboard({ range, environment }) {
-      return invoke({ action: "overview", range, environment });
+      return request("analytics-dashboard", {
+        action: "overview",
+        range,
+        environment
+      });
     },
 
     loadUserDetail(userID) {
-      return invoke({ action: "user_detail", user_id: userID });
+      return request("analytics-dashboard", {
+        action: "user_detail",
+        user_id: userID
+      });
     }
   };
 
-  window.AtheviaAnalyticsReady = getClient();
+  window.AtheviaAnalyticsReady = Promise.resolve();
 })();
