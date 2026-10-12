@@ -558,52 +558,261 @@
     `;
   }
 
-  function renderWeekGlance(plan) {
+  function baselineLabel(kind, value) {
+    const maps = {
+      running: {
+        none: "I don't currently run",
+        runWalk: "Run/walk for 15–20 minutes",
+        continuous10Minutes: "Run continuously ~10 minutes",
+        continuous20To30Minutes: "Run continuously 20–30 minutes",
+        regular5K: "Regularly run 5 km or more"
+      },
+      swimming: {
+        none: "Not swimming yet",
+        continuous25: "25 m continuous",
+        continuous50: "50 m continuous",
+        continuous100: "100 m continuous",
+        continuous200Plus: "200 m+ continuous"
+      },
+      cycling: {
+        under20: "Less than 20 minutes",
+        twentyToThirty: "20–30 minutes",
+        thirtyToFortyFive: "30–45 minutes",
+        fortyFiveToSixty: "45–60 minutes",
+        sixtyPlus: "60 minutes or more"
+      }
+    };
+    return maps[kind]?.[value] || prettyEnum(value);
+  }
+
+  function weekdayName(raw) {
+    return ({2:'Monday',3:'Tuesday',4:'Wednesday',5:'Thursday',6:'Friday',7:'Saturday',1:'Sunday'})[Number(raw)] || String(raw ?? '—');
+  }
+
+  function renderOnboardingSection(detail) {
+    const o = detail.onboarding;
+    if (!o) return '<div class="empty-state compact"><b>No onboarding snapshot</b>This account predates the current onboarding model.</div>';
+    const objective = o.objective || {};
+    const event = objective.event || {};
+    const distance = event.distance || {};
+    const components = distance.components || {};
+    const baseline = o.baseline || {};
+    const selectedSports = (o.sportPreferences || []).filter(p => Number(p.sessionsPerWeek) > 0);
+    const schedule = o.schedule?.days || [];
+
+    return `
+      <div class="profile-section-grid">
+        <article class="profile-panel">
+          <h3>Goal & starting point</h3>
+          <div class="profile-kv">
+            <div><span>Objective</span><strong>${escapeHTML(prettyEnum(objective.kind || o.legacyGoal))}</strong></div>
+            ${event.sport ? `<div><span>Event sport</span><strong>${escapeHTML(prettyEnum(event.sport))}</strong></div>` : ''}
+            ${distance.kind ? `<div><span>Event distance</span><strong>${escapeHTML(prettyEnum(distance.kind))}</strong></div>` : ''}
+            ${event.eventDate ? `<div><span>Event date</span><strong>${escapeHTML(formatDate(event.eventDate))}</strong></div>` : ''}
+            ${event.targetIntent ? `<div><span>Intent</span><strong>${escapeHTML(prettyEnum(event.targetIntent))}</strong></div>` : ''}
+            ${components.runMeters ? `<div><span>Run target</span><strong>${escapeHTML(formatDistance(components.runMeters))}</strong></div>` : ''}
+            ${components.bikeMeters ? `<div><span>Bike target</span><strong>${escapeHTML(formatDistance(components.bikeMeters))}</strong></div>` : ''}
+            ${components.swimMeters ? `<div><span>Swim target</span><strong>${escapeHTML(formatDistance(components.swimMeters))}</strong></div>` : ''}
+            <div><span>Experience</span><strong>${escapeHTML(prettyEnum(detail.profile?.experienceLevel))}</strong></div>
+            <div><span>Running baseline</span><strong>${escapeHTML(baselineLabel('running', baseline.running))}</strong></div>
+            <div><span>Swimming baseline</span><strong>${escapeHTML(baselineLabel('swimming', baseline.swimming))}</strong></div>
+            <div><span>Cycling baseline</span><strong>${escapeHTML(baselineLabel('cycling', baseline.cycling))}</strong></div>
+            <div><span>Swim stroke</span><strong>${escapeHTML(prettyEnum(baseline.stroke))}</strong></div>
+            <div><span>Assessed</span><strong>${escapeHTML(formatDateTime(baseline.assessedAt))}</strong></div>
+          </div>
+        </article>
+
+        <article class="profile-panel">
+          <h3>Onboarding choices</h3>
+          <div class="profile-kv">
+            <div><span>Birth date</span><strong>${escapeHTML(formatDate(o.birthDate))}</strong></div>
+            <div><span>Plan start date</span><strong>${escapeHTML(formatDate(o.planStartDate))}</strong></div>
+            <div><span>Training days target</span><strong>${escapeHTML(o.trainingDayTarget ?? '—')}</strong></div>
+            <div><span>Pool length</span><strong>${escapeHTML(detail.profile?.poolLengthMeters ? `${detail.profile.poolLengthMeters} m` : '—')}</strong></div>
+            <div><span>Units</span><strong>${detail.profile?.usesMetricUnits ? 'Metric' : 'Imperial'}</strong></div>
+            <div><span>Onboarding stage</span><strong>${escapeHTML(prettyEnum(o.stage))}</strong></div>
+            <div><span>Completed</span><strong>${escapeHTML(formatDateTime(o.completedAt))}</strong></div>
+          </div>
+          <div class="selected-sports-list">
+            ${selectedSports.map(pref => {
+              const sport = sportTheme(pref.sport);
+              return `<div style="--sport:${sport.tint}"><i></i><span>${escapeHTML(sport.label)}</span><strong>${escapeHTML(pref.sessionsPerWeek)} / week · ${escapeHTML(pref.typicalMinutes)} min</strong></div>`;
+            }).join('') || '<div class="muted">No selected sports recorded.</div>'}
+          </div>
+        </article>
+
+        <article class="profile-panel profile-panel-wide">
+          <h3>Availability selected during onboarding</h3>
+          <div class="availability-grid">
+            ${schedule.map(day => `
+              <div class="${day.isAvailable ? 'available' : 'unavailable'}">
+                <span>${escapeHTML(weekdayName(day.weekday))}</span>
+                <strong>${day.isAvailable ? 'Available' : 'Unavailable'}</strong>
+                <small>${day.maxDurationMinutes != null ? `${escapeHTML(day.maxDurationMinutes)} min max` : 'No duration limit'}</small>
+              </div>
+            `).join('')}
+          </div>
+        </article>
+      </div>
+    `;
+  }
+
+  function renderPreferencesSection(detail) {
+    const p = detail.preferences;
+    if (!p) return '<div class="empty-state compact"><b>No stored preferences</b>No preference snapshot is available.</div>';
+    const open = p.openWaterTrainingConsent || {};
+    return `
+      <div class="profile-section-grid">
+        <article class="profile-panel">
+          <h3>Training preferences</h3>
+          <div class="profile-kv">
+            <div><span>Training days target</span><strong>${escapeHTML(p.trainingDayTarget ?? '—')}</strong></div>
+            <div><span>Units</span><strong>${p.usesMetricUnits ? 'Metric' : 'Imperial'}</strong></div>
+            <div><span>Pool length</span><strong>${escapeHTML(p.poolLengthMeters ? `${p.poolLengthMeters} m` : '—')}</strong></div>
+          </div>
+          <div class="selected-sports-list">
+            ${(p.sportPreferences || []).map(pref => {
+              const sport = sportTheme(pref.sport);
+              return `<div style="--sport:${sport.tint}"><i></i><span>${escapeHTML(sport.label)}</span><strong>${escapeHTML(pref.sessionsPerWeek)} / week · ${escapeHTML(pref.typicalMinutes)} min typical</strong></div>`;
+            }).join('')}
+          </div>
+        </article>
+
+        <article class="profile-panel">
+          <h3>Open-water preference</h3>
+          <div class="profile-kv">
+            <div><span>Explicitly confirmed</span><strong>${open.explicitlyConfirmed ? 'Yes' : 'No'}</strong></div>
+            <div><span>Safe venue</span><strong>${open.hasSafeVenue ? 'Yes' : 'No'}</strong></div>
+            <div><span>Supervision / buddy</span><strong>${open.hasSupervisionOrBuddy ? 'Yes' : 'No'}</strong></div>
+          </div>
+        </article>
+      </div>
+    `;
+  }
+
+  function renderProgressSection(detail) {
+    const progress = detail.progress || {};
+    const recent = progress.lastFourWeeks || {};
+    const lifetime = progress.lifetime || {};
+    const sports = progress.sports || [];
+    return `
+      <div class="progress-summary-grid">
+        <div><span>Last 4 weeks</span><strong>${escapeHTML(formatDuration(recent.trainingSeconds) || '0 min')}</strong><small>Training</small></div>
+        <div><span>Last 4 weeks</span><strong>${escapeHTML(recent.completedWorkouts ?? 0)}</strong><small>Completed workouts</small></div>
+        <div><span>Last 4 weeks</span><strong>${recent.adherencePercentage == null ? '—' : escapeHTML(recent.adherencePercentage) + '%'}</strong><small>Plan completed</small></div>
+        <div><span>Lifetime</span><strong>${escapeHTML(lifetime.planWeeks ?? 0)}</strong><small>Plan weeks</small></div>
+        <div><span>Lifetime</span><strong>${escapeHTML(lifetime.completedWorkouts ?? 0)}</strong><small>Completed workouts</small></div>
+        <div><span>Lifetime</span><strong>${escapeHTML(formatDuration(lifetime.totalRecordedDurationSeconds) || '0 min')}</strong><small>Recorded training</small></div>
+      </div>
+      <div class="progress-sports">
+        ${sports.map(item => {
+          const sport = sportTheme(item.sport);
+          return `
+            <article style="--sport:${sport.tint};--sport-deep:${sport.deep}">
+              <div class="progress-sport-head"><span></span><strong>${escapeHTML(sport.label)}</strong></div>
+              <div class="profile-kv">
+                <div><span>Completed</span><strong>${escapeHTML(item.completedWorkouts)}</strong></div>
+                <div><span>Recorded time</span><strong>${escapeHTML(formatDuration(item.recordedDurationSeconds) || '—')}</strong></div>
+                <div><span>Recorded distance</span><strong>${escapeHTML(formatDistance(item.recordedDistanceMeters) || '—')}</strong></div>
+                <div><span>Best distance</span><strong>${escapeHTML(formatDistance(item.bestDistanceMeters) || '—')}</strong></div>
+                <div><span>Latest completion</span><strong>${escapeHTML(formatDateTime(item.latestCompletedAt))}</strong></div>
+              </div>
+            </article>
+          `;
+        }).join('') || '<div class="empty-state compact"><b>No completed training yet</b>Progress appears as workouts are completed and synchronized.</div>'}
+      </div>
+    `;
+  }
+
+  function weekDays(plan) {
     const start = new Date(plan.startDate);
-    const workouts = plan.workouts || [];
-    const days = Array.from({ length: 7 }, (_, index) => {
+    return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(start);
       date.setUTCDate(start.getUTCDate() + index);
       return date;
     });
+  }
 
+  function renderSelectableWeek(plan, selectedDay) {
+    const workouts = plan.workouts || [];
     return `
-      <div class="week-glance">
-        ${days.map(date => {
+      <div class="week-glance selectable-week">
+        ${weekDays(plan).map(date => {
           const key = dayKey(date);
           const dayWorkouts = workouts.filter(workout => dayKey(workout.date) === key);
           const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'short', timeZone: 'UTC' }).format(date);
           const dayNumber = new Intl.DateTimeFormat(undefined, { day: 'numeric', timeZone: 'UTC' }).format(date);
           return `
-            <div class="week-day">
+            <button type="button" class="week-day day-select ${selectedDay === key ? 'selected' : ''}" data-day="${escapeHTML(key)}">
               <div class="week-day-head"><span>${escapeHTML(weekday)}</span><strong>${escapeHTML(dayNumber)}</strong></div>
               <div class="week-day-body">
                 ${dayWorkouts.length ? dayWorkouts.map(workout => {
                   const sport = sportTheme(workout.discipline);
-                  const recorded = recordedTarget(workout);
-                  const feedback = workout.feedback;
                   return `
                     <div class="glance-workout" style="--sport:${sport.tint};--sport-deep:${sport.deep}">
                       <div class="glance-sport"><span></span>${escapeHTML(sport.label)}</div>
                       <strong>${escapeHTML(workout.title)}</strong>
                       <small>${escapeHTML(workoutTarget(workout))}</small>
-                      ${recorded ? `<small class="glance-recorded">Recorded · ${escapeHTML(recorded)}</small>` : ''}
-                      <div class="glance-meta">
-                        <span class="glance-status ${escapeHTML(workout.status)}">${escapeHTML(workout.status)}</span>
-                        ${feedback?.rpe != null ? `<span>RPE ${escapeHTML(feedback.rpe)}/10</span>` : ''}
-                        ${workout.recorded?.averageHeartRate != null ? `<span>${escapeHTML(Math.round(workout.recorded.averageHeartRate))} bpm</span>` : ''}
-                      </div>
+                      <div class="glance-meta"><span class="glance-status ${escapeHTML(workout.status)}">${escapeHTML(workout.status)}</span></div>
                     </div>
                   `;
                 }).join('') : '<div class="glance-empty">No session</div>'}
               </div>
-            </div>
+            </button>
           `;
         }).join('')}
       </div>
     `;
   }
 
+  function renderSelectedDay(plan, day) {
+    const workouts = (plan.workouts || []).filter(workout => dayKey(workout.date) === day);
+    if (!workouts.length) {
+      return '<div class="selected-day-empty"><b>No workout planned</b><span>This day has no session in the selected week.</span></div>';
+    }
+    return `<div class="selected-day-workouts">${workouts.map(renderWorkoutMirror).join('')}</div>`;
+  }
+
+  function renderPlansSection(detail, selectedWeekIndex, selectedDay) {
+    const plans = detail.plans || [];
+    if (!plans.length) return '<div class="empty-state"><b>No plan available</b>This account does not yet have a cloud-backed training plan.</div>';
+    const plan = plans[selectedWeekIndex] || plans[plans.length - 1];
+    const resolvedIndex = Math.max(0, plans.indexOf(plan));
+    const firstWorkoutDay = plan.workouts?.[0] ? dayKey(plan.workouts[0].date) : dayKey(plan.startDate);
+    const activeDay = selectedDay || firstWorkoutDay;
+    return `
+      <div class="plan-selector-row">
+        <div>
+          <span class="week-kicker">WEEKLY PLAN</span>
+          <h3>Week ${escapeHTML(plan.weekNumber)}</h3>
+          <p>${escapeHTML(formatDate(plan.startDate))} – ${escapeHTML(formatDate(plan.endDate))}</p>
+        </div>
+        <label class="week-select-label">
+          <span>Select week</span>
+          <select id="athlete-week-select">
+            ${plans.map((item, index) => `
+              <option value="${index}" ${index === resolvedIndex ? 'selected' : ''}>
+                Week ${escapeHTML(item.weekNumber)} · ${escapeHTML(formatDate(item.startDate))}
+              </option>
+            `).join('')}
+          </select>
+        </label>
+        <div class="week-completion">
+          <strong>${escapeHTML(plan.completion?.percentage ?? 0)}%</strong>
+          <span>${escapeHTML(plan.completion?.completed ?? 0)} of ${escapeHTML(plan.completion?.planned ?? 0)} completed</span>
+        </div>
+      </div>
+      <div class="week-reason">${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}</div>
+      ${renderSelectableWeek(plan, activeDay)}
+      <div class="selected-day-detail">
+        <div class="selected-day-title">
+          <span>SELECTED DAY</span>
+          <strong>${escapeHTML(formatDate(activeDay))}</strong>
+        </div>
+        ${renderSelectedDay(plan, activeDay)}
+      </div>
+    `;
+  }
 
   function renderUserDetail(detail) {
     $('#user-detail-title').textContent = detail.user?.name || 'Athlete';
@@ -613,51 +822,72 @@
     ].filter(Boolean).join(' · ');
 
     const plans = detail.plans ?? [];
-    const latest = plans[plans.length - 1];
+    const latestIndex = Math.max(0, plans.length - 1);
+    const latest = plans[latestIndex];
+
     const content = $('#user-detail-content');
     content.innerHTML = `
       <div class="mirror-profile">
         <div><span>Experience</span><strong>${escapeHTML(prettyEnum(detail.profile?.experienceLevel))}</strong></div>
         <div><span>Training since</span><strong>${escapeHTML(formatDate(detail.profile?.trainingStartDate))}</strong></div>
-        <div><span>Pool</span><strong>${escapeHTML(detail.profile?.poolLengthMeters ? `${detail.profile.poolLengthMeters} m` : '—')}</strong></div>
         <div><span>Current week</span><strong>${escapeHTML(latest ? `Week ${latest.weekNumber}` : '—')}</strong></div>
         <div><span>Completion</span><strong>${escapeHTML(latest?.completion?.percentage ?? 0)}%</strong></div>
         <div><span>Cloud snapshot</span><strong>${escapeHTML(formatDateTime(detail.snapshotCreatedAt))}</strong></div>
       </div>
 
-      <div class="sport-key">
-        ${['running','swimming','cycling','multisport','recovery','rest'].map(type => {
-          const sport = sportTheme(type);
-          return `<span style="--sport:${sport.tint}"><i></i>${sport.label}</span>`;
-        }).join('')}
-      </div>
+      <nav class="athlete-section-tabs" aria-label="Athlete detail sections">
+        <button type="button" data-athlete-section="onboarding" aria-pressed="true">Onboarding profile</button>
+        <button type="button" data-athlete-section="plans" aria-pressed="false">Weekly plans</button>
+        <button type="button" data-athlete-section="progress" aria-pressed="false">Progress</button>
+        <button type="button" data-athlete-section="preferences" aria-pressed="false">Preferences</button>
+      </nav>
 
-      <div class="plan-week-list full-week-list">
-        ${plans.slice().reverse().map((plan, index) => `
-          <section class="full-week-card ${index === 0 ? 'current-week' : ''}">
-            <div class="full-week-head">
-              <div>
-                <span class="week-kicker">${index === 0 ? 'CURRENT / LATEST WEEK' : 'TRAINING WEEK'}</span>
-                <h3>Week ${escapeHTML(plan.weekNumber)}</h3>
-                <p>${escapeHTML(formatDate(plan.startDate))} – ${escapeHTML(formatDate(plan.endDate))}</p>
-              </div>
-              <div class="week-completion">
-                <strong>${escapeHTML(plan.completion?.percentage ?? 0)}%</strong>
-                <span>${escapeHTML(plan.completion?.completed ?? 0)} of ${escapeHTML(plan.completion?.planned ?? 0)} completed</span>
-              </div>
-            </div>
-            <div class="week-reason">${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}</div>
-            ${renderWeekGlance(plan)}
-            <details class="week-workout-details" ${index === 0 ? 'open' : ''}>
-              <summary>Workout details <span>${escapeHTML((plan.workouts || []).length)} sessions</span></summary>
-              <div class="athlete-workout-list">
-                ${(plan.workouts ?? []).map(renderWorkoutMirror).join('')}
-              </div>
-            </details>
-          </section>
-        `).join('') || '<div class="empty-state"><b>No plan available</b>This account does not yet have a cloud-backed training plan.</div>'}
-      </div>
+      <section class="athlete-section" data-athlete-panel="onboarding">
+        ${renderOnboardingSection(detail)}
+      </section>
+      <section class="athlete-section" data-athlete-panel="plans" hidden>
+        <div id="athlete-plans-content"></div>
+      </section>
+      <section class="athlete-section" data-athlete-panel="progress" hidden>
+        ${renderProgressSection(detail)}
+      </section>
+      <section class="athlete-section" data-athlete-panel="preferences" hidden>
+        ${renderPreferencesSection(detail)}
+      </section>
     `;
+
+    let selectedWeekIndex = latestIndex;
+    let selectedDay = latest?.workouts?.[0] ? dayKey(latest.workouts[0].date) : (latest ? dayKey(latest.startDate) : '');
+
+    const renderPlans = () => {
+      $('#athlete-plans-content').innerHTML = renderPlansSection(detail, selectedWeekIndex, selectedDay);
+      const select = $('#athlete-week-select');
+      if (select) {
+        select.addEventListener('change', event => {
+          selectedWeekIndex = Number(event.target.value);
+          const plan = detail.plans[selectedWeekIndex];
+          selectedDay = plan?.workouts?.[0] ? dayKey(plan.workouts[0].date) : dayKey(plan?.startDate);
+          renderPlans();
+        });
+      }
+      $$('.day-select', $('#athlete-plans-content')).forEach(button => {
+        button.addEventListener('click', () => {
+          selectedDay = button.dataset.day;
+          renderPlans();
+        });
+      });
+    };
+    renderPlans();
+
+    $$('.athlete-section-tabs button').forEach(button => {
+      button.addEventListener('click', () => {
+        const section = button.dataset.athleteSection;
+        $$('.athlete-section-tabs button').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+        $$('.athlete-section').forEach(panel => {
+          panel.hidden = panel.dataset.athletePanel !== section;
+        });
+      });
+    });
   }
 
   async function openUserDetail(userID) {
