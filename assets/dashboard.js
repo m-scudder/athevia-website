@@ -410,7 +410,7 @@
         return;
       }
       if (error?.status === 403) {
-        showAuth('This Athevia account is not authorized to access analytics.');
+        showAuth('This admin session is not authorized to access analytics.');
         return;
       }
       setBanner('Live analytics could not be loaded. No fallback user data is shown.', 'error');
@@ -443,17 +443,26 @@
     event.preventDefault();
     const button = $('#admin-signin-button');
     const email = $('#admin-email').value;
+    const password = $('#admin-password').value;
     button.disabled = true;
-    button.textContent = 'Sending…';
+    button.textContent = 'Signing in…';
     $('#auth-status').textContent = '';
     try {
-      await auth.sendMagicLink(email);
-      $('#auth-status').textContent = 'Check your email and open the secure sign-in link on this device.';
+      await auth.signIn(email, password);
+      $('#admin-password').value = '';
+      showDashboard();
+      await refresh();
     } catch (error) {
-      $('#auth-status').textContent = error?.message || 'Could not send the sign-in link.';
+      if (error?.status === 429) {
+        $('#auth-status').textContent = 'Too many failed attempts. Try again in about 15 minutes.';
+      } else {
+        $('#auth-status').textContent = error?.status === 401
+          ? 'Invalid admin email or password.'
+          : (error?.message || 'Could not sign in.');
+      }
     } finally {
       button.disabled = false;
-      button.textContent = 'Send sign-in link';
+      button.textContent = 'Sign in';
     }
   });
 
@@ -470,8 +479,8 @@
     refresh();
   });
   $('#refresh-dashboard').addEventListener('click', refresh);
-  $('#dashboard-signout').addEventListener('click', async () => {
-    await auth.signOut();
+  $('#dashboard-signout').addEventListener('click', () => {
+    auth.signOut();
     showAuth('Signed out.');
   });
   $('#user-detail-close').addEventListener('click', closeUserDetail);
@@ -486,22 +495,11 @@
   });
   $('#event-search').addEventListener('input', event => renderEvents(eventFilter, event.target.value));
 
-  const session = await auth.session();
+  const session = auth.session();
   if (!session) {
     showAuth();
   } else {
     showDashboard();
     await refresh();
   }
-
-  await auth.onAuthStateChange(async sessionValue => {
-    if (!sessionValue) {
-      showAuth();
-      return;
-    }
-    if (!state.authenticated) {
-      showDashboard();
-      await refresh();
-    }
-  });
 })();
