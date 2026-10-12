@@ -8,7 +8,7 @@
   <meta name="description" content="Internal Athevia product analytics dashboard.">
   <title>Athevia Analytics</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="../assets/dashboard.css?v=20261012-profile-plans-progress">
+  <link rel="stylesheet" href="../assets/dashboard.css?v=20261012-split-theme">
 </head>
 <body class="dashboard-body">
 <section class="auth-gate" id="auth-gate">
@@ -69,6 +69,7 @@
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
         </select>
+        <button class="dashboard-select theme-toggle" type="button" id="theme-toggle" aria-label="Switch color theme">☀ Light</button>
         <button class="dashboard-select" type="button" id="refresh-dashboard">Refresh</button>
         <button class="dashboard-select" type="button" id="dashboard-signout">Sign out</button>
       </div>
@@ -113,9 +114,9 @@
           </div>
           <div class="breakdown" id="sport-breakdown"></div>
           <div class="legend-row" style="margin-top:20px">
-            <span><i class="legend-dot" style="background:#4195ef"></i>Run</span>
-            <span><i class="legend-dot" style="background:#54d76a"></i>Cycle</span>
-            <span><i class="legend-dot" style="background:#a78bfa"></i>Swim</span>
+            <span><i class="legend-dot" style="background:#F7B538"></i>Run</span>
+            <span><i class="legend-dot" style="background:#29C76B"></i>Cycle</span>
+            <span><i class="legend-dot" style="background:#218CFF"></i>Swim</span>
           </div>
         </article>
       </div>
@@ -248,7 +249,7 @@
     <div id="user-detail-content"></div>
   </section>
 </div>
-<script src="../assets/dashboard-provider.js?v=20261012-profile-plans-progress"></script>
-<script src="../assets/dashboard.js?v=20261012-profile-plans-progress"></script>
+<script src="../assets/dashboard-provider.js?v=20261012-split-theme"></script>
+<script src="../assets/dashboard.js?v=20261012-split-theme"></script>
 </body>
 </html>

@@ -569,3 +569,211 @@ a{color:inherit;text-decoration:none}
   .selected-sports-list>div{grid-template-columns:10px 1fr}
   .selected-sports-list strong{grid-column:2;text-align:left}
 }
+
+/* Split weekly plan review + dashboard light/dark themes */
+:root{
+  color-scheme:dark;
+  --dash-sidebar-bg:#0a0a0b;
+  --dash-card-soft:#171719;
+  --dash-card-quiet:#141417;
+  --dash-table-head:#0e0e10;
+  --dash-hover:#161618;
+  --dash-input:#0c0c0e;
+  --dash-workout-bg:#111114;
+  --dash-workout-pane:#09090b;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --dash-bg:#f5f6f8;
+  --dash-panel:#ffffff;
+  --dash-panel-2:#f0f1f4;
+  --dash-panel-3:#e8eaf0;
+  --dash-line:#d9dce3;
+  --dash-text:#16171a;
+  --dash-muted:#666b75;
+  --dash-blue:#1677d2;
+  --dash-green:#178a48;
+  --dash-orange:#bd5c1a;
+  --dash-red:#c43a3a;
+  --dash-purple:#7048c8;
+  --dash-sidebar-bg:#ffffff;
+  --dash-card-soft:#f6f7f9;
+  --dash-card-quiet:#fafafa;
+  --dash-table-head:#f0f1f4;
+  --dash-hover:#f5f6f8;
+  --dash-input:#ffffff;
+  --dash-workout-bg:#ffffff;
+  --dash-workout-pane:#f8f9fb;
+}
+html,body.dashboard-body,.dashboard-main,.auth-gate,.user-drawer{transition:background-color .18s ease,color .18s ease}
+.dashboard-sidebar{background:var(--dash-sidebar-bg)}
+.dashboard-nav button{color:var(--dash-muted)}
+.dashboard-nav button:hover,.dashboard-nav button[aria-current="page"]{background:var(--dash-panel-2);color:var(--dash-text)}
+.dashboard-table th{background:var(--dash-table-head)}
+.dashboard-table tbody tr:hover{background:var(--dash-hover)}
+.avatar,.activity-icon{background:var(--dash-panel-3)}
+.dashboard-select,.dashboard-search,.auth-card input,.week-select-label select{background:var(--dash-input);color:var(--dash-text)}
+.profile-kv>div,.selected-sports-list>div,.synced-metric,.feedback-topline>div,
+.prescription-summary>div,.workout-step,.badge{background:var(--dash-card-soft)}
+.athlete-workout,.progress-sports article{background:var(--dash-workout-bg)}
+.plan-workout-pane,.selected-day-detail{background:var(--dash-workout-pane)}
+.user-drawer-head{background:color-mix(in srgb,var(--dash-bg) 94%,transparent)}
+.chart-axis{stroke:color-mix(in srgb,var(--dash-text) 18%,transparent)}
+.chart-label{fill:var(--dash-muted)}
+.funnel-row span:first-child{color:var(--dash-text)}
+.funnel-track,.breakdown-track{background:var(--dash-panel-3)}
+.status-pill,.tiny-pill{color:var(--dash-text)}
+.auth-card,.metric-card,.dashboard-panel,.profile-panel,.full-week-card,.plan-selector-row{background:var(--dash-panel)}
+.drawer-close,.athlete-section-tabs button{background:var(--dash-panel);color:var(--dash-text)}
+.athlete-section-tabs button[aria-pressed="true"]{background:var(--dash-text);color:var(--dash-bg);border-color:var(--dash-text)}
+.theme-toggle{
+  min-width:92px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:650
+}
+
+/* Replace horizontal week strip with left day rail + right workout pane */
+.plan-selector-row{
+  border-bottom:1px solid var(--dash-line);
+  border-radius:16px 16px 0 0
+}
+.plan-selector-row+.week-reason{
+  border-top:0
+}
+.plan-split-view{
+  display:grid;
+  grid-template-columns:minmax(250px,310px) minmax(0,1fr);
+  min-height:620px;
+  border:1px solid var(--dash-line);
+  border-top:0;
+  border-radius:0 0 16px 16px;
+  overflow:hidden;
+  background:var(--dash-panel)
+}
+.plan-day-rail{
+  border-right:1px solid var(--dash-line);
+  background:var(--dash-panel);
+  padding:10px;
+  overflow:auto;
+  max-height:calc(100vh - 300px)
+}
+.rail-day{
+  padding:10px 0;
+  border-bottom:1px solid var(--dash-line)
+}
+.rail-day:last-child{border-bottom:0}
+.rail-day-date{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:0 7px 7px
+}
+.rail-day-date span{
+  color:var(--dash-muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:800
+}
+.rail-day-date strong{font-size:18px}
+.rail-day-workouts{display:grid;gap:7px}
+.rail-workout{
+  width:100%;display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:9px;align-items:center;
+  border:1px solid var(--dash-line);border-left:4px solid var(--sport);border-radius:10px;
+  background:color-mix(in srgb,var(--sport) 9%,var(--dash-card-soft));
+  padding:10px;text-align:left;cursor:pointer
+}
+.rail-workout:hover{
+  border-color:color-mix(in srgb,var(--sport) 62%,var(--dash-line));
+  background:color-mix(in srgb,var(--sport) 14%,var(--dash-card-soft))
+}
+.rail-workout.selected{
+  border-color:var(--sport);
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--sport) 20%,transparent);
+  background:color-mix(in srgb,var(--sport) 18%,var(--dash-card-soft))
+}
+.rail-sport-dot{width:8px;height:8px;border-radius:50%;background:var(--sport)}
+.rail-workout-copy{display:block;min-width:0}
+.rail-workout-copy small{
+  display:block;color:var(--sport);font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.07em
+}
+.rail-workout-copy strong{
+  display:block;color:var(--dash-text);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0
+}
+.rail-workout-copy em{
+  display:block;color:var(--dash-muted);font-size:9px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.rail-status{
+  border:1px solid var(--dash-line);border-radius:999px;padding:3px 6px;
+  color:var(--dash-muted);font-size:8px;text-transform:capitalize
+}
+.rail-status.completed{color:#18864a;border-color:#2f9f60}
+.rail-status.skipped{color:#c94a4a;border-color:#d67575}
+.rail-rest{
+  padding:10px;border:1px dashed var(--dash-line);border-radius:9px;color:var(--dash-muted);font-size:10px;text-align:center
+}
+.plan-workout-pane{
+  min-width:0;padding:20px 24px 36px;overflow:auto;max-height:calc(100vh - 300px)
+}
+.workout-pane-label{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px
+}
+.workout-pane-label span{font-size:9px;color:var(--dash-muted);font-weight:850;letter-spacing:.09em}
+.workout-pane-label strong{font-size:12px}
+.plan-workout-pane .athlete-workout{
+  max-width:none;
+  border-top-width:4px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08)
+}
+:root[data-theme="light"] .plan-workout-pane .athlete-workout{
+  box-shadow:0 8px 24px rgba(31,38,48,.07)
+}
+.workout-pane-empty{
+  min-height:360px;display:grid;place-items:center;text-align:center;color:var(--dash-muted)
+}
+.workout-pane-empty b,.workout-pane-empty span{display:block}
+.workout-pane-empty b{color:var(--dash-text);font-size:16px}
+.workout-pane-empty span{font-size:11px;margin-top:5px}
+
+/* Stronger sport identity in both themes */
+.athlete-workout{
+  border-left:5px solid var(--sport)!important;
+  border-top-color:var(--sport)!important
+}
+.sport-orb{
+  color:var(--sport)!important;
+  background:color-mix(in srgb,var(--sport) 18%,var(--dash-panel))!important;
+  border-color:color-mix(in srgb,var(--sport) 55%,var(--dash-line))!important
+}
+.athlete-workout-title span,.progress-sport-head strong,.selected-sports-list span{color:var(--sport)!important}
+.glance-workout,.rail-workout{
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sport) 12%,transparent)
+}
+:root[data-theme="light"] .rail-workout,
+:root[data-theme="light"] .glance-workout{
+  background:color-mix(in srgb,var(--sport) 10%,#fff)
+}
+:root[data-theme="light"] .athlete-workout{
+  background:color-mix(in srgb,var(--sport) 4%,#fff)
+}
+:root[data-theme="light"] .badge.success{
+  color:#146b3b;border-color:#8bcaa6;background:#e9f7ef
+}
+:root[data-theme="light"] .badge.fail{
+  color:#a62f2f;border-color:#e7a6a6;background:#fff0f0
+}
+:root[data-theme="light"] .badge.info{
+  color:#1c5f99;border-color:#9bc4e7;background:#eef7ff
+}
+:root[data-theme="light"] .demo-banner{
+  border-color:#e1c28d;background:#fff8ea;color:#825b18
+}
+:root[data-theme="light"] .app-mirror-notice{
+  border-color:#a9cce6;background:#f1f8fd
+}
+:root[data-theme="light"] .app-mirror-notice strong{color:#195b89}
+:root[data-theme="light"] .app-mirror-notice span{color:#527086}
+
+@media(max-width:980px){
+  .plan-split-view{grid-template-columns:220px minmax(0,1fr)}
+  .plan-workout-pane{padding:16px}
+}
+@media(max-width:720px){
+  .plan-split-view{grid-template-columns:1fr}
+  .plan-day-rail{
+    border-right:0;border-bottom:1px solid var(--dash-line);max-height:280px
+  }
+  .plan-workout-pane{max-height:none}
+}
