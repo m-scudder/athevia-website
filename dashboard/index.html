@@ -17,11 +17,13 @@
     <div>
       <p class="eyebrow">PRIVATE ADMIN</p>
       <h1>Athevia analytics</h1>
-      <p>Sign in with the email attached to the authorized Athevia admin account. A secure magic link will be sent to that address.</p>
+      <p>Sign in with the authorized admin email and dashboard password. Credentials are verified only by the Supabase Edge Function.</p>
     </div>
     <label for="admin-email">Admin email</label>
-    <input id="admin-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-    <button type="submit" class="auth-primary" id="admin-signin-button">Send sign-in link</button>
+    <input id="admin-email" name="email" type="email" autocomplete="username" required placeholder="you@example.com">
+    <label for="admin-password">Password</label>
+    <input id="admin-password" name="password" type="password" autocomplete="current-password" required placeholder="Admin password">
+    <button type="submit" class="auth-primary" id="admin-signin-button">Sign in</button>
     <p class="auth-status" id="auth-status" aria-live="polite"></p>
   </form>
 </section>
@@ -209,7 +211,7 @@
     <section class="dashboard-view" data-view="setup" hidden>
       <div class="section-intro">
         <h2>Live analytics connection</h2>
-        <p>This dashboard now reads through a JWT-protected Supabase Edge Function and an explicit server-side admin allowlist.</p>
+        <p>This dashboard uses a server-verified admin password and a short-lived opaque Edge Function session. Normal athlete authentication is separate.</p>
       </div>
       <div class="two-column">
         <article class="dashboard-panel provider-card">
@@ -218,14 +220,14 @@
             <p class="muted" style="margin:0">The UI expects one provider method and does not depend on PostHog.</p>
           </div>
           <span class="badge success">Connected</span>
-          <code>Supabase Auth → analytics-dashboard Edge Function → private analytics/read models</code>
+          <code>Admin login Edge Function → opaque admin session → analytics-dashboard → private analytics/read models</code>
         </article>
         <article class="dashboard-panel">
           <div class="panel-head">
             <div><h2>Backend requirements</h2><p>Do these before production data is exposed.</p></div>
           </div>
           <div class="activity-list">
-            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Authenticated admin session</b><span>Supabase verifies the browser session before any analytics data is returned.</span></div></div>
+            <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Authenticated admin session</b><span>The Edge Function verifies the admin password and issues a short-lived opaque session token.</span></div></div>
             <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Explicit admin allowlist</b><span>Normal athlete accounts receive no dashboard access.</span></div></div>
             <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Private semantic event stream</b><span>App events are ingested server-side with the user derived from the verified JWT.</span></div></div>
             <div class="activity-item"><div class="activity-icon">✓</div><div class="activity-copy"><b>Training plan drill-down</b><span>Latest cloud backups provide plans, steps, status and recorded completion without exposing GPS routes.</span></div></div>
