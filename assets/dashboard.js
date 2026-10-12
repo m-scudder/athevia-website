@@ -90,6 +90,25 @@
     return value >= 1000 ? `${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)} km` : `${Math.round(value)} m`;
   };
 
+  const THEME_KEY = 'athevia.dashboard.theme';
+
+  function applyTheme(theme) {
+    const resolved = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = resolved;
+    localStorage.setItem(THEME_KEY, resolved);
+    const button = $('#theme-toggle');
+    if (button) {
+      button.textContent = resolved === 'dark' ? '☀ Light' : '☾ Dark';
+      button.setAttribute('aria-label', `Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`);
+    }
+  }
+
+  function initialTheme() {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
   function initials(value) {
     return String(value || 'A').split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
   }
@@ -733,53 +752,91 @@
     });
   }
 
-  function renderSelectableWeek(plan, selectedDay) {
+  function workoutSelectionKey(workout, index) {
+    return String(workout?.id || `${dayKey(workout?.date)}-${index}`);
+  }
+
+  function renderDayRail(plan, selectedWorkoutKey) {
     const workouts = plan.workouts || [];
     return `
-      <div class="week-glance selectable-week">
+      <aside class="plan-day-rail" aria-label="Week days and workouts">
         ${weekDays(plan).map(date => {
           const key = dayKey(date);
           const dayWorkouts = workouts.filter(workout => dayKey(workout.date) === key);
           const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'short', timeZone: 'UTC' }).format(date);
           const dayNumber = new Intl.DateTimeFormat(undefined, { day: 'numeric', timeZone: 'UTC' }).format(date);
           return `
-            <button type="button" class="week-day day-select ${selectedDay === key ? 'selected' : ''}" data-day="${escapeHTML(key)}">
-              <div class="week-day-head"><span>${escapeHTML(weekday)}</span><strong>${escapeHTML(dayNumber)}</strong></div>
-              <div class="week-day-body">
-                ${dayWorkouts.length ? dayWorkouts.map(workout => {
-                  const sport = sportTheme(workout.discipline);
-                  return `
-                    <div class="glance-workout" style="--sport:${sport.tint};--sport-deep:${sport.deep}">
-                      <div class="glance-sport"><span></span>${escapeHTML(sport.label)}</div>
-                      <strong>${escapeHTML(workout.title)}</strong>
-                      <small>${escapeHTML(workoutTarget(workout))}</small>
-                      <div class="glance-meta"><span class="glance-status ${escapeHTML(workout.status)}">${escapeHTML(workout.status)}</span></div>
-                    </div>
-                  `;
-                }).join('') : '<div class="glance-empty">No session</div>'}
+            <section class="rail-day">
+              <div class="rail-day-date">
+                <span>${escapeHTML(weekday)}</span>
+                <strong>${escapeHTML(dayNumber)}</strong>
               </div>
-            </button>
+              <div class="rail-day-workouts">
+                ${dayWorkouts.length ? dayWorkouts.map((workout, index) => {
+                  const selectionKey = workoutSelectionKey(workout, index);
+                  const sport = sportTheme(workout.discipline);
+                  const selected = selectionKey === selectedWorkoutKey;
+                  return `
+                    <button
+                      type="button"
+                      class="rail-workout ${selected ? 'selected' : ''}"
+                      data-workout-key="${escapeHTML(selectionKey)}"
+                      style="--sport:${sport.tint};--sport-deep:${sport.deep}"
+                      aria-pressed="${selected ? 'true' : 'false'}"
+                    >
+                      <span class="rail-sport-dot"></span>
+                      <span class="rail-workout-copy">
+                        <small>${escapeHTML(sport.label)}</small>
+                        <strong>${escapeHTML(workout.title)}</strong>
+                        <em>${escapeHTML(workoutTarget(workout))}</em>
+                      </span>
+                      <span class="rail-status ${escapeHTML(workout.status)}">${escapeHTML(workout.status)}</span>
+                    </button>
+                  `;
+                }).join('') : '<div class="rail-rest">No session</div>'}
+              </div>
+            </section>
           `;
         }).join('')}
-      </div>
+      </aside>
     `;
   }
 
-  function renderSelectedDay(plan, day) {
-    const workouts = (plan.workouts || []).filter(workout => dayKey(workout.date) === day);
-    if (!workouts.length) {
-      return '<div class="selected-day-empty"><b>No workout planned</b><span>This day has no session in the selected week.</span></div>';
+  function findSelectedWorkout(plan, selectedWorkoutKey) {
+    const workouts = plan.workouts || [];
+    for (let index = 0; index < workouts.length; index++) {
+      if (workoutSelectionKey(workouts[index], index) === selectedWorkoutKey) return workouts[index];
     }
-    return `<div class="selected-day-workouts">${workouts.map(renderWorkoutMirror).join('')}</div>`;
+    return workouts[0] || null;
   }
 
-  function renderPlansSection(detail, selectedWeekIndex, selectedDay) {
+  function renderWorkoutPane(plan, selectedWorkoutKey) {
+    const workout = findSelectedWorkout(plan, selectedWorkoutKey);
+    if (!workout) {
+      return '<div class="workout-pane-empty"><b>No workout selected</b><span>This week has no planned sessions.</span></div>';
+    }
+    return `
+      <main class="plan-workout-pane">
+        <div class="workout-pane-label">
+          <span>WORKOUT DETAIL</span>
+          <strong>${escapeHTML(formatDate(workout.date))}</strong>
+        </div>
+        ${renderWorkoutMirror(workout)}
+      </main>
+    `;
+  }
+
+  function renderPlansSection(detail, selectedWeekIndex, selectedWorkoutKey) {
     const plans = detail.plans || [];
     if (!plans.length) return '<div class="empty-state"><b>No plan available</b>This account does not yet have a cloud-backed training plan.</div>';
     const plan = plans[selectedWeekIndex] || plans[plans.length - 1];
     const resolvedIndex = Math.max(0, plans.indexOf(plan));
-    const firstWorkoutDay = plan.workouts?.[0] ? dayKey(plan.workouts[0].date) : dayKey(plan.startDate);
-    const activeDay = selectedDay || firstWorkoutDay;
+    const workouts = plan.workouts || [];
+    const fallbackKey = workouts[0] ? workoutSelectionKey(workouts[0], 0) : '';
+    const activeWorkoutKey = workouts.some((workout, index) => workoutSelectionKey(workout, index) === selectedWorkoutKey)
+      ? selectedWorkoutKey
+      : fallbackKey;
+
     return `
       <div class="plan-selector-row">
         <div>
@@ -803,16 +860,13 @@
         </div>
       </div>
       <div class="week-reason">${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}</div>
-      ${renderSelectableWeek(plan, activeDay)}
-      <div class="selected-day-detail">
-        <div class="selected-day-title">
-          <span>SELECTED DAY</span>
-          <strong>${escapeHTML(formatDate(activeDay))}</strong>
-        </div>
-        ${renderSelectedDay(plan, activeDay)}
+      <div class="plan-split-view">
+        ${renderDayRail(plan, activeWorkoutKey)}
+        ${renderWorkoutPane(plan, activeWorkoutKey)}
       </div>
     `;
   }
+
 
   function renderUserDetail(detail) {
     $('#user-detail-title').textContent = detail.user?.name || 'Athlete';
@@ -857,22 +911,22 @@
     `;
 
     let selectedWeekIndex = latestIndex;
-    let selectedDay = latest?.workouts?.[0] ? dayKey(latest.workouts[0].date) : (latest ? dayKey(latest.startDate) : '');
+    let selectedWorkoutKey = latest?.workouts?.[0] ? workoutSelectionKey(latest.workouts[0], 0) : '';
 
     const renderPlans = () => {
-      $('#athlete-plans-content').innerHTML = renderPlansSection(detail, selectedWeekIndex, selectedDay);
+      $('#athlete-plans-content').innerHTML = renderPlansSection(detail, selectedWeekIndex, selectedWorkoutKey);
       const select = $('#athlete-week-select');
       if (select) {
         select.addEventListener('change', event => {
           selectedWeekIndex = Number(event.target.value);
           const plan = detail.plans[selectedWeekIndex];
-          selectedDay = plan?.workouts?.[0] ? dayKey(plan.workouts[0].date) : dayKey(plan?.startDate);
+          selectedWorkoutKey = plan?.workouts?.[0] ? workoutSelectionKey(plan.workouts[0], 0) : '';
           renderPlans();
         });
       }
-      $$('.day-select', $('#athlete-plans-content')).forEach(button => {
+      $('.rail-workout', $('#athlete-plans-content')).forEach(button => {
         button.addEventListener('click', () => {
-          selectedDay = button.dataset.day;
+          selectedWorkoutKey = button.dataset.workoutKey;
           renderPlans();
         });
       });
@@ -957,6 +1011,8 @@
     $('#view-subtitle').textContent = title[1];
   }
 
+  applyTheme(initialTheme());
+
   $('#admin-signin-form').addEventListener('submit', async event => {
     event.preventDefault();
     const button = $('#admin-signin-button');
@@ -997,6 +1053,9 @@
     refresh();
   });
   $('#refresh-dashboard').addEventListener('click', refresh);
+  $('#theme-toggle')?.addEventListener('click', () => {
+    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
   $('#dashboard-signout').addEventListener('click', () => {
     auth.signOut();
     showAuth('Signed out.');
