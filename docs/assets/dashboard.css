@@ -210,3 +210,80 @@ a{color:inherit;text-decoration:none}
   .user-drawer{padding:16px}.user-drawer-head{top:-16px;margin:-16px -16px 16px;padding:16px}
   .user-detail-metrics,.workout-targets{grid-template-columns:1fr}
 }
+
+/* Athlete app mirror */
+.user-drawer{width:min(880px,100%)}
+.mirror-profile{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px
+}
+.mirror-profile>div{
+  padding:12px 13px;border:1px solid var(--dash-line);background:var(--dash-panel);border-radius:12px
+}
+.mirror-profile span,.prescription-summary span,.feedback-topline span,.mirror-list span,.recorded-cell span,.advanced-metrics span{
+  display:block;color:var(--dash-muted);font-size:9px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px
+}
+.mirror-profile strong{font-size:13px}
+.app-mirror-notice{
+  display:grid;gap:4px;padding:12px 14px;margin-bottom:14px;border:1px solid #29465e;
+  background:#0d1821;border-radius:12px
+}
+.app-mirror-notice strong{font-size:12px;color:#b7d9ff}
+.app-mirror-notice span{font-size:10px;color:#8ea6bb;line-height:1.45}
+.athlete-workout-list{display:grid;gap:12px;padding:12px;background:#09090b}
+.athlete-workout{
+  border:1px solid var(--dash-line);background:#111114;border-radius:16px;padding:16px
+}
+.athlete-workout-header{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:start}
+.sport-orb{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  background:#1d1d21;border:1px solid #2b2b30;font-weight:750;font-size:16px
+}
+.athlete-workout-title span{display:block;color:var(--dash-muted);font-size:9px;text-transform:uppercase;letter-spacing:.05em}
+.athlete-workout-title h3{margin:3px 0 2px;font-size:20px;letter-spacing:-.03em}
+.athlete-workout-title small{color:var(--dash-muted);font-size:11px}
+.mirror-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--dash-line)}
+.mirror-eyebrow{font-size:9px;font-weight:800;letter-spacing:.11em;color:#77777e;margin-bottom:9px}
+.mirror-goal{font-size:12px;color:#b0b0b6;line-height:1.5;margin:0 0 12px}
+.recorded-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  border:1px solid var(--dash-line);border-radius:13px;overflow:hidden;background:#0d0d0f
+}
+.recorded-cell{padding:14px;border-bottom:1px solid var(--dash-line)}
+.recorded-cell:nth-child(odd){border-right:1px solid var(--dash-line)}
+.recorded-cell:nth-last-child(-n+2){border-bottom:0}
+.recorded-cell strong{font-size:21px;letter-spacing:-.03em}
+.advanced-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:8px}
+.advanced-metrics>div{padding:9px 10px;border-radius:9px;background:#171719}
+.advanced-metrics strong{font-size:11px}
+.mirror-source,.mirror-note{margin:8px 0 0;color:#66666d;font-size:9px;line-height:1.45}
+.feedback-topline{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.feedback-topline>div{
+  padding:13px;border-radius:12px;background:#171719;border:1px solid #232327
+}
+.feedback-topline strong{display:block;font-size:22px;letter-spacing:-.03em}
+.feedback-topline small{display:block;color:var(--dash-muted);font-size:9px;margin-top:3px}
+.mirror-list{display:grid;margin-top:8px;border:1px solid var(--dash-line);border-radius:11px;overflow:hidden}
+.mirror-list>div{display:flex;justify-content:space-between;gap:18px;padding:10px 11px;border-top:1px solid var(--dash-line)}
+.mirror-list>div:first-child{border-top:0}
+.mirror-list span{margin:0}
+.mirror-list strong{font-size:10px;text-align:right}
+.prescription-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.prescription-summary>div{padding:9px 10px;border-radius:9px;background:#171719}
+.prescription-summary strong{font-size:11px}
+.state-banner{
+  display:flex;gap:7px;align-items:center;margin-top:12px;padding:10px 11px;border-radius:10px;font-size:10px
+}
+.state-banner.skipped{background:#171719;color:#b1b1b7}
+.mirror-empty{padding:10px 11px;border-radius:10px;background:#171719;color:var(--dash-muted);font-size:10px}
+.mirror-week>.week-reason{font-size:10px}
+@media(max-width:720px){
+  .mirror-profile,.advanced-metrics,.prescription-summary{grid-template-columns:1fr 1fr}
+  .athlete-workout-header{grid-template-columns:42px 1fr}
+  .athlete-workout-header>.badge{grid-column:2}
+}
+@media(max-width:480px){
+  .mirror-profile,.advanced-metrics,.prescription-summary,.feedback-topline,.recorded-grid{grid-template-columns:1fr}
+  .recorded-cell:nth-child(odd){border-right:0}
+  .recorded-cell{border-bottom:1px solid var(--dash-line)!important}
+  .recorded-cell:last-child{border-bottom:0!important}
+}
