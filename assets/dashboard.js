@@ -950,12 +950,20 @@
     $('#user-detail-title').textContent = 'Loading plan…';
     $('#user-detail-subtitle').textContent = '';
     $('#user-detail-content').innerHTML = '<div class="empty-state"><b>Loading training plan</b>Reading the latest secure cloud backup.</div>';
+    let detail;
     try {
-      const detail = await provider.loadUserDetail(userID);
+      detail = await provider.loadUserDetail(userID);
+    } catch (error) {
+      console.error('User detail API failed', error);
+      $('#user-detail-content').innerHTML = '<div class="empty-state"><b>Could not load this athlete</b>The secure analytics API returned an error.</div>';
+      return;
+    }
+
+    try {
       renderUserDetail(detail);
     } catch (error) {
-      console.error('User detail failed', error);
-      $('#user-detail-content').innerHTML = '<div class="empty-state"><b>Could not load this plan</b>The secure analytics API returned an error.</div>';
+      console.error('User detail render failed', error);
+      $('#user-detail-content').innerHTML = '<div class="empty-state"><b>Could not render this athlete</b>The athlete data loaded successfully, but the dashboard UI hit a rendering error.</div>';
     }
   }
 
