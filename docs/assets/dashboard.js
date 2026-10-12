@@ -346,6 +346,89 @@
     return 'Worst possible';
   }
 
+  function sportTheme(discipline) {
+    return {
+      running: { tint: '#F7B538', deep: '#C27A14', label: 'Run' },
+      swimming: { tint: '#218CFF', deep: '#0A4DC2', label: 'Swim' },
+      cycling: { tint: '#29C76B', deep: '#0A8047', label: 'Cycle' },
+      multisport: { tint: '#9E6BF2', deep: '#6333B8', label: 'Multisport' },
+      recovery: { tint: '#33C7D9', deep: '#08758C', label: 'Recovery' },
+      rest: { tint: '#8C8F9E', deep: '#3D4252', label: 'Rest' }
+    }[discipline] || { tint: '#8C8F9E', deep: '#3D4252', label: prettyEnum(discipline) };
+  }
+
+  function dayKey(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value).slice(0, 10) : date.toISOString().slice(0, 10);
+  }
+
+  function formatMetricNumber(value, digits = 0) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toFixed(digits) : null;
+  }
+
+  function renderSyncedMetrics(workout) {
+    const recorded = workout.recorded;
+    if (!recorded) return '';
+    const m = recorded.metrics || {};
+    const rows = [
+      ['Average heart rate', recorded.averageHeartRate, v => `${Math.round(v)} bpm`],
+      ['Maximum heart rate', recorded.maximumHeartRate, v => `${Math.round(v)} bpm`],
+      ['Elevation ascended', recorded.elevationAscendedMeters, v => `${Math.round(v)} m`],
+      ['Swim lengths', recorded.swimmingLengths, v => String(Math.round(v))],
+      ['Stroke count', recorded.swimmingStrokeCount, v => String(Math.round(v))],
+      ['Longest continuous swim', recorded.longestContinuousSwimMeters, v => formatDistance(v)],
+      ['Active energy', m.activeEnergyKilocalories, v => `${Math.round(v)} kcal`],
+      ['Average cadence', m.averageCadence, v => `${Math.round(v)} spm`],
+      ['Average running speed', m.averageRunningSpeed, v => `${(Number(v) * 3.6).toFixed(1)} km/h`],
+      ['Average running power', m.averageRunningPower, v => `${Math.round(v)} W`],
+      ['Average stride length', m.averageStrideLength, v => `${Number(v).toFixed(2)} m`],
+      ['Ground contact time', m.averageGroundContactTime, v => `${Math.round(v)} ms`],
+      ['Vertical oscillation', m.averageVerticalOscillation, v => `${Number(v).toFixed(1)} cm`],
+      ['Average cycling speed', m.averageCyclingSpeed, v => `${(Number(v) * 3.6).toFixed(1)} km/h`],
+      ['Average cycling cadence', m.averageCyclingCadence, v => `${Math.round(v)} rpm`],
+      ['Average cycling power', m.averageCyclingPower, v => `${Math.round(v)} W`],
+      ['Functional threshold power', m.functionalThresholdPower, v => `${Math.round(v)} W`],
+      ['Apple workout effort', m.workoutEffort, v => `${Number(v).toFixed(1)} / 10`],
+      ['Apple estimated effort', m.estimatedWorkoutEffort, v => `${Number(v).toFixed(1)} / 10`],
+      ['Swim environment', m.swimEnvironment, v => prettyEnum(v)]
+    ].filter(([, value]) => value !== null && value !== undefined && value !== '');
+
+    const segments = Array.isArray(m.multisportSegments) ? m.multisportSegments : [];
+    const segmentHTML = segments.length ? `
+      <div class="synced-segments">
+        <div class="mirror-eyebrow">MULTISPORT SEGMENTS</div>
+        ${segments.map((segment, index) => `
+          <div class="synced-segment">
+            <strong>${escapeHTML(segment.isTransition ? `Transition ${index + 1}` : prettyEnum(segment.sport || `Segment ${index + 1}`))}</strong>
+            <span>${escapeHTML([
+              formatDuration(segment.durationSeconds),
+              formatDistance(segment.distanceMeters),
+              segment.swimEnvironment ? prettyEnum(segment.swimEnvironment) : null
+            ].filter(Boolean).join(' · '))}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+
+    if (!rows.length && !segments.length) return '';
+    return `
+      <div class="synced-metrics">
+        <div class="mirror-eyebrow">ALL SYNCED METRICS</div>
+        <div class="synced-metric-grid">
+          ${rows.map(([label, value, formatter]) => `
+            <div class="synced-metric">
+              <span>${escapeHTML(label)}</span>
+              <strong>${escapeHTML(formatter(value) || '—')}</strong>
+            </div>
+          `).join('')}
+        </div>
+        ${segmentHTML}
+      </div>
+    `;
+  }
+
   function averageRecordedMetric(workout) {
     const recorded = workout.recorded;
     if (!recorded?.distanceMeters || !recorded?.durationSeconds) return { label: 'Avg Speed', value: '—' };
@@ -372,43 +455,22 @@
     const cells = [
       ['Workout Time', formatDuration(recorded.durationSeconds) || '—'],
       ['Distance', formatDistance(recorded.distanceMeters) || '—'],
-      ['Active Calories', metrics.activeEnergyKilocalories != null ? `${Math.round(metrics.activeEnergyKilocalories)} kcal` : '—'],
-      ['Total Calories', '—'],
       [average.label, average.value],
-      ['Avg Heart Rate', recorded.averageHeartRate != null ? `${Math.round(recorded.averageHeartRate)} bpm` : '—']
+      ['Avg Heart Rate', recorded.averageHeartRate != null ? `${Math.round(recorded.averageHeartRate)} bpm` : '—'],
+      ['Active Calories', metrics.activeEnergyKilocalories != null ? `${Math.round(metrics.activeEnergyKilocalories)} kcal` : '—'],
+      ['Completed', formatDateTime(workout.completedAt)]
     ];
 
-    const advanced = [
-      ['Max Heart Rate', recorded.maximumHeartRate != null ? `${Math.round(recorded.maximumHeartRate)} bpm` : null],
-      ['Elevation', recorded.elevationAscendedMeters != null ? `${Math.round(recorded.elevationAscendedMeters)} m` : null],
-      ['Swim Lengths', recorded.swimmingLengths],
-      ['Stroke Count', recorded.swimmingStrokeCount != null ? Math.round(recorded.swimmingStrokeCount) : null],
-      ['Longest Continuous', formatDistance(recorded.longestContinuousSwimMeters)],
-      ['Avg Cadence', metrics.averageCadence != null ? `${Math.round(metrics.averageCadence)} spm` : null],
-      ['Running Power', metrics.averageRunningPower != null ? `${Math.round(metrics.averageRunningPower)} W` : null],
-      ['Stride Length', metrics.averageStrideLength != null ? `${Number(metrics.averageStrideLength).toFixed(2)} m` : null],
-      ['Ground Contact', metrics.averageGroundContactTime != null ? `${Math.round(metrics.averageGroundContactTime)} ms` : null],
-      ['Vertical Oscillation', metrics.averageVerticalOscillation != null ? `${Number(metrics.averageVerticalOscillation).toFixed(1)} cm` : null],
-      ['Cycling Cadence', metrics.averageCyclingCadence != null ? `${Math.round(metrics.averageCyclingCadence)} rpm` : null],
-      ['Cycling Power', metrics.averageCyclingPower != null ? `${Math.round(metrics.averageCyclingPower)} W` : null]
-    ].filter(([, value]) => value != null && value !== '');
-
     return `
-      <section class="mirror-section">
+      <section class="mirror-section recorded-section">
         <div class="mirror-eyebrow">RECORDED WORKOUT</div>
         <div class="recorded-grid">
           ${cells.map(([label, value]) => `
             <div class="recorded-cell"><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>
           `).join('')}
         </div>
-        ${advanced.length ? `
-          <div class="advanced-metrics">
-            ${advanced.map(([label, value]) => `
-              <div><span>${escapeHTML(label)}</span><strong>${escapeHTML(value)}</strong></div>
-            `).join('')}
-          </div>
-        ` : ''}
-        <div class="mirror-source">Source: ${escapeHTML(recorded.source || 'Imported workout')} · Imported ${escapeHTML(formatDateTime(recorded.importedAt))}</div>
+        ${renderSyncedMetrics(workout)}
+        <div class="mirror-source">Source: ${escapeHTML(recorded.source || 'Imported workout')} · Synced ${escapeHTML(formatDateTime(recorded.importedAt))}</div>
       </section>
     `;
   }
@@ -475,12 +537,13 @@
 
   function renderWorkoutMirror(workout) {
     const stateClass = workout.status === 'completed' ? 'success' : workout.status === 'skipped' ? 'fail' : 'info';
+    const sport = sportTheme(workout.discipline);
     return `
-      <article class="athlete-workout">
+      <article class="athlete-workout sport-${escapeHTML(workout.discipline)}" style="--sport:${sport.tint};--sport-deep:${sport.deep}">
         <div class="athlete-workout-header">
-          <div class="sport-orb">${escapeHTML(String(workout.discipline || '?').slice(0,1).toUpperCase())}</div>
+          <div class="sport-orb">${escapeHTML(sport.label.slice(0, 1))}</div>
           <div class="athlete-workout-title">
-            <span>${escapeHTML(formatDate(workout.date))} · ${escapeHTML(prettyEnum(workout.discipline))}</span>
+            <span>${escapeHTML(formatDate(workout.date))} · ${escapeHTML(sport.label)}</span>
             <h3>${escapeHTML(workout.title)}</h3>
             <small>${escapeHTML(workoutTarget(workout))}</small>
           </div>
@@ -494,6 +557,53 @@
       </article>
     `;
   }
+
+  function renderWeekGlance(plan) {
+    const start = new Date(plan.startDate);
+    const workouts = plan.workouts || [];
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(start);
+      date.setUTCDate(start.getUTCDate() + index);
+      return date;
+    });
+
+    return `
+      <div class="week-glance">
+        ${days.map(date => {
+          const key = dayKey(date);
+          const dayWorkouts = workouts.filter(workout => dayKey(workout.date) === key);
+          const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'short', timeZone: 'UTC' }).format(date);
+          const dayNumber = new Intl.DateTimeFormat(undefined, { day: 'numeric', timeZone: 'UTC' }).format(date);
+          return `
+            <div class="week-day">
+              <div class="week-day-head"><span>${escapeHTML(weekday)}</span><strong>${escapeHTML(dayNumber)}</strong></div>
+              <div class="week-day-body">
+                ${dayWorkouts.length ? dayWorkouts.map(workout => {
+                  const sport = sportTheme(workout.discipline);
+                  const recorded = recordedTarget(workout);
+                  const feedback = workout.feedback;
+                  return `
+                    <div class="glance-workout" style="--sport:${sport.tint};--sport-deep:${sport.deep}">
+                      <div class="glance-sport"><span></span>${escapeHTML(sport.label)}</div>
+                      <strong>${escapeHTML(workout.title)}</strong>
+                      <small>${escapeHTML(workoutTarget(workout))}</small>
+                      ${recorded ? `<small class="glance-recorded">Recorded · ${escapeHTML(recorded)}</small>` : ''}
+                      <div class="glance-meta">
+                        <span class="glance-status ${escapeHTML(workout.status)}">${escapeHTML(workout.status)}</span>
+                        ${feedback?.rpe != null ? `<span>RPE ${escapeHTML(feedback.rpe)}/10</span>` : ''}
+                        ${workout.recorded?.averageHeartRate != null ? `<span>${escapeHTML(Math.round(workout.recorded.averageHeartRate))} bpm</span>` : ''}
+                      </div>
+                    </div>
+                  `;
+                }).join('') : '<div class="glance-empty">No session</div>'}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
 
   function renderUserDetail(detail) {
     $('#user-detail-title').textContent = detail.user?.name || 'Athlete';
@@ -515,31 +625,36 @@
         <div><span>Cloud snapshot</span><strong>${escapeHTML(formatDateTime(detail.snapshotCreatedAt))}</strong></div>
       </div>
 
-      <div class="app-mirror-notice">
-        <strong>Athlete app mirror</strong>
-        <span>This view uses the same cloud-backed plan, workout, feedback and recovery records that restore into the app. HealthKit-only charts and GPS routes remain device-local.</span>
+      <div class="sport-key">
+        ${['running','swimming','cycling','multisport','recovery','rest'].map(type => {
+          const sport = sportTheme(type);
+          return `<span style="--sport:${sport.tint}"><i></i>${sport.label}</span>`;
+        }).join('')}
       </div>
 
-      <div class="plan-week-list">
+      <div class="plan-week-list full-week-list">
         ${plans.slice().reverse().map((plan, index) => `
-          <details class="plan-week mirror-week" ${index === 0 ? 'open' : ''}>
-            <summary>
+          <section class="full-week-card ${index === 0 ? 'current-week' : ''}">
+            <div class="full-week-head">
               <div>
-                <strong>Week ${escapeHTML(plan.weekNumber)}</strong>
-                <span>${escapeHTML(formatDate(plan.startDate))} – ${escapeHTML(formatDate(plan.endDate))}</span>
+                <span class="week-kicker">${index === 0 ? 'CURRENT / LATEST WEEK' : 'TRAINING WEEK'}</span>
+                <h3>Week ${escapeHTML(plan.weekNumber)}</h3>
+                <p>${escapeHTML(formatDate(plan.startDate))} – ${escapeHTML(formatDate(plan.endDate))}</p>
               </div>
-              <div class="week-summary-right">
-                <span class="badge ${plan.status === 'completed' ? 'success' : 'info'}">${escapeHTML(plan.status)}</span>
-                <strong>${escapeHTML(plan.completion?.completed ?? 0)}/${escapeHTML(plan.completion?.planned ?? 0)}</strong>
+              <div class="week-completion">
+                <strong>${escapeHTML(plan.completion?.percentage ?? 0)}%</strong>
+                <span>${escapeHTML(plan.completion?.completed ?? 0)} of ${escapeHTML(plan.completion?.planned ?? 0)} completed</span>
               </div>
-            </summary>
-            <div class="week-reason">
-              ${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}
             </div>
-            <div class="athlete-workout-list">
-              ${(plan.workouts ?? []).map(renderWorkoutMirror).join('')}
-            </div>
-          </details>
+            <div class="week-reason">${escapeHTML(plan.generationReason || plan.generationReasonCode || 'Generated training week')}</div>
+            ${renderWeekGlance(plan)}
+            <details class="week-workout-details" ${index === 0 ? 'open' : ''}>
+              <summary>Workout details <span>${escapeHTML((plan.workouts || []).length)} sessions</span></summary>
+              <div class="athlete-workout-list">
+                ${(plan.workouts ?? []).map(renderWorkoutMirror).join('')}
+              </div>
+            </details>
+          </section>
         `).join('') || '<div class="empty-state"><b>No plan available</b>This account does not yet have a cloud-backed training plan.</div>'}
       </div>
     `;
