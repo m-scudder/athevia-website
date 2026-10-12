@@ -924,7 +924,7 @@
           renderPlans();
         });
       }
-      $('.rail-workout', $('#athlete-plans-content')).forEach(button => {
+      $$('.rail-workout', $('#athlete-plans-content')).forEach(button => {
         button.addEventListener('click', () => {
           selectedWorkoutKey = button.dataset.workoutKey;
           renderPlans();
